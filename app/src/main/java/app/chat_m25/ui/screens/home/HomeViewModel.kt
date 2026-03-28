@@ -91,4 +91,16 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
+
+    fun togglePin(session: ChatSession) {
+        viewModelScope.launch {
+            chatRepository.updatePinned(session.id, !session.isPinned)
+        }
+    }
+
+    fun toggleDoNotDisturb(session: ChatSession) {
+        viewModelScope.launch {
+            chatRepository.updateDoNotDisturb(session.id, !session.doNotDisturb)
+        }
+    }
 }

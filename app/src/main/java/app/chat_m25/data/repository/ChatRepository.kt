@@ -64,13 +64,28 @@ class ChatRepository @Inject constructor(
         }
     }
 
+    suspend fun updatePinned(chatId: Long, isPinned: Boolean) {
+        chatSessionDao.updatePinned(chatId, isPinned)
+    }
+
+    suspend fun updateDoNotDisturb(chatId: Long, doNotDisturb: Boolean) {
+        chatSessionDao.updateDoNotDisturb(chatId, doNotDisturb)
+    }
+
+    suspend fun updateBackgroundColor(chatId: Long, color: Long) {
+        chatSessionDao.updateBackgroundColor(chatId, color)
+    }
+
     private fun ChatSessionEntity.toDomain() = ChatSession(
         id = id,
         name = name,
         avatar = avatar,
         lastMessage = lastMessage,
         lastMessageTime = lastMessageTime,
-        unreadCount = unreadCount
+        unreadCount = unreadCount,
+        isPinned = isPinned,
+        doNotDisturb = doNotDisturb,
+        backgroundColor = backgroundColor
     )
 
     private fun ChatSession.toEntity() = ChatSessionEntity(
@@ -79,7 +94,10 @@ class ChatRepository @Inject constructor(
         avatar = avatar,
         lastMessage = lastMessage,
         lastMessageTime = lastMessageTime,
-        unreadCount = unreadCount
+        unreadCount = unreadCount,
+        isPinned = isPinned,
+        doNotDisturb = doNotDisturb,
+        backgroundColor = backgroundColor
     )
 
     private fun MessageEntity.toDomain() = Message(

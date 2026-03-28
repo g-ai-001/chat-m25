@@ -1,6 +1,8 @@
 package app.chat_m25.ui.screens.home
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,9 +19,13 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Badge
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -33,6 +39,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
@@ -125,7 +134,9 @@ fun HomeScreen(
                     sessions = uiState.sessions,
                     isLoading = uiState.isLoading,
                     onChatClick = onChatClick,
-                    onCreateDemo = { viewModel.createDemoSession() }
+                    onCreateDemo = { viewModel.createDemoSession() },
+                    onTogglePin = { viewModel.togglePin(it) },
+                    onToggleDoNotDisturb = { viewModel.toggleDoNotDisturb(it) }
                 )
             }
         }
@@ -248,7 +259,9 @@ fun ChatListContent(
     sessions: List<ChatSession>,
     isLoading: Boolean,
     onChatClick: (Long) -> Unit,
-    onCreateDemo: () -> Unit
+    onCreateDemo: () -> Unit,
+    onTogglePin: (ChatSession) -> Unit,
+    onToggleDoNotDisturb: (ChatSession) -> Unit
 ) {
     if (sessions.isEmpty() && !isLoading) {
         EmptyState(
@@ -262,7 +275,9 @@ fun ChatListContent(
             items(sessions, key = { it.id }) { session ->
                 ChatSessionItem(
                     session = session,
-                    onClick = { onChatClick(session.id) }
+                    onClick = { onChatClick(session.id) },
+                    onTogglePin = { onTogglePin(session) },
+                    onToggleDoNotDisturb = { onToggleDoNotDisturb(session) }
                 )
                 HorizontalDivider(
                     modifier = Modifier.padding(start = 72.dp),
@@ -273,15 +288,23 @@ fun ChatListContent(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ChatSessionItem(
     session: ChatSession,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onTogglePin: () -> Unit,
+    onToggleDoNotDisturb: () -> Unit
 ) {
+    var showMenu by remember { mutableStateOf(false) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = { showMenu = true }
+            )
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -300,14 +323,34 @@ fun ChatSessionItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = session.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
-                )
+                ) {
+                    if (session.isPinned) {
+                        Icon(
+                            Icons.Default.PushPin,
+                            contentDescription = "已置顶",
+                            modifier = Modifier.padding(end = 4.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    if (session.doNotDisturb) {
+                        Icon(
+                            Icons.Default.NotificationsOff,
+                            contentDescription = "免打扰",
+                            modifier = Modifier.padding(end = 4.dp),
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    Text(
+                        text = session.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
                 Text(
                     text = DateTimeFormatter.formatChatTime(session.lastMessageTime),
                     style = MaterialTheme.typography.bodySmall,
@@ -338,6 +381,32 @@ fun ChatSessionItem(
                     }
                 }
             }
+        }
+
+        DropdownMenu(
+            expanded = showMenu,
+            onDismissRequest = { showMenu = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text(if (session.isPinned) "取消置顶" else "置顶聊天") },
+                onClick = {
+                    onTogglePin()
+                    showMenu = false
+                },
+                leadingIcon = {
+                    Icon(Icons.Default.PushPin, contentDescription = null)
+                }
+            )
+            DropdownMenuItem(
+                text = { Text(if (session.doNotDisturb) "取消免打扰" else "消息免打扰") },
+                onClick = {
+                    onToggleDoNotDisturb()
+                    showMenu = false
+                },
+                leadingIcon = {
+                    Icon(Icons.Default.NotificationsOff, contentDescription = null)
+                }
+            )
         }
     }
 }

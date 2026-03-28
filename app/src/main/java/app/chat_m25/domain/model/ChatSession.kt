@@ -6,5 +6,8 @@ data class ChatSession(
     val avatar: String? = null,
     val lastMessage: String = "",
     val lastMessageTime: Long = System.currentTimeMillis(),
-    val unreadCount: Int = 0
+    val unreadCount: Int = 0,
+    val isPinned: Boolean = false,
+    val doNotDisturb: Boolean = false,
+    val backgroundColor: Long = 0xFFFFFFFF
 )

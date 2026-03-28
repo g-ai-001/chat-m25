@@ -18,7 +18,8 @@ data class ChatDetailUiState(
     val messages: List<Message> = emptyList(),
     val inputText: String = "",
     val isLoading: Boolean = true,
-    val showEmojiPicker: Boolean = false
+    val showEmojiPicker: Boolean = false,
+    val showBackgroundPicker: Boolean = false
 )
 
 @HiltViewModel
@@ -89,6 +90,18 @@ class ChatDetailViewModel @Inject constructor(
 
     fun hideEmojiPicker() {
         _uiState.value = _uiState.value.copy(showEmojiPicker = false)
+    }
+
+    fun toggleBackgroundPicker() {
+        _uiState.value = _uiState.value.copy(showBackgroundPicker = !_uiState.value.showBackgroundPicker)
+    }
+
+    fun updateBackgroundColor(color: Long) {
+        viewModelScope.launch {
+            chatRepository.updateBackgroundColor(chatId, color)
+            val session = chatRepository.getSessionById(chatId)
+            _uiState.value = _uiState.value.copy(chatSession = session, showBackgroundPicker = false)
+        }
     }
 
     fun addDemoMessages() {
