@@ -29,6 +29,10 @@
 - [x] 修复ChatDetailScreen.kt中Alignment.Bottom引用错误
 - [x] 修复ProfileScreen.kt中Icons.Outlined.Chat引用错误
 
+### 0.1.2 (PATCH) - 已完成
+**目标**: 修复0.1.1版本中的导入冲突问题
+- [x] 移除ChatDetailScreen.kt中重复的Alignment导入
+
 ### 0.2.0 (功能增强)
 **目标**: 增加更多微信特色功能
 - [ ] 实现朋友圈入口和界面
