@@ -28,6 +28,7 @@ import androidx.navigation.navArgument
 import app.chat_m25.ui.screens.chat.ChatDetailScreen
 import app.chat_m25.ui.screens.contacts.ContactsScreen
 import app.chat_m25.ui.screens.home.HomeScreen
+import app.chat_m25.ui.screens.moments.MomentsScreen
 import app.chat_m25.ui.screens.profile.ProfileScreen
 
 sealed class Screen(
@@ -44,6 +45,7 @@ sealed class Screen(
 object Routes {
     const val CHAT_DETAIL = "chat/{chatId}"
     fun chatDetail(chatId: Long) = "chat/$chatId"
+    const val MOMENTS = "moments"
 }
 
 val bottomNavItems = listOf(Screen.Home, Screen.Contacts, Screen.Profile)
@@ -97,6 +99,9 @@ fun ChatApp() {
                 HomeScreen(
                     onChatClick = { chatId ->
                         navController.navigate(Routes.chatDetail(chatId))
+                    },
+                    onMomentsClick = {
+                        navController.navigate(Routes.MOMENTS)
                     }
                 )
             }
@@ -113,6 +118,11 @@ fun ChatApp() {
                 val chatId = backStackEntry.arguments?.getLong("chatId") ?: 0L
                 ChatDetailScreen(
                     chatId = chatId,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Routes.MOMENTS) {
+                MomentsScreen(
                     onBack = { navController.popBackStack() }
                 )
             }

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.chat_m25.data.repository.ChatRepository
 import app.chat_m25.domain.model.ChatSession
+import app.chat_m25.domain.model.Message
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +15,9 @@ import javax.inject.Inject
 data class HomeUiState(
     val sessions: List<ChatSession> = emptyList(),
     val isLoading: Boolean = true,
-    val searchQuery: String = ""
+    val searchQuery: String = "",
+    val isSearchMode: Boolean = false,
+    val searchResults: List<Message> = emptyList()
 )
 
 @HiltViewModel
@@ -55,6 +58,36 @@ class HomeViewModel @Inject constructor(
                         chatRepository.sendMessage(chatId, lastMsg)
                     }
                 }
+            }
+        }
+    }
+
+    fun updateSearchQuery(query: String) {
+        _uiState.value = _uiState.value.copy(searchQuery = query)
+        if (query.isNotBlank()) {
+            searchMessages(query)
+        } else {
+            _uiState.value = _uiState.value.copy(searchResults = emptyList(), isSearchMode = false)
+        }
+    }
+
+    fun enterSearchMode() {
+        _uiState.value = _uiState.value.copy(isSearchMode = true)
+    }
+
+    fun exitSearchMode() {
+        _uiState.value = _uiState.value.copy(
+            isSearchMode = false,
+            searchQuery = "",
+            searchResults = emptyList()
+        )
+    }
+
+    private fun searchMessages(query: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isSearchMode = true)
+            chatRepository.searchMessages(query).collect { messages ->
+                _uiState.value = _uiState.value.copy(searchResults = messages)
             }
         }
     }
