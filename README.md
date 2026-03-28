@@ -4,6 +4,15 @@
 
 ## 最新版本
 
+### v0.2.1 (2026-03-29)
+
+**PATCH版本 - 重构优化代码结构和UI组件**
+
+- 增强日志系统，添加线程信息、堆栈跟踪和分级日志方法
+- 新增公共UI组件：Avatar、EmptyState、DateTimeFormatter、ChatTopBar
+- 统一日期时间格式化逻辑，移除重复代码
+- 优化多个Screen的代码，提升可维护性
+
 ### v0.2.0 (2026-03-29)
 
 **功能增强版本 - 实现朋友圈和聊天记录搜索**
@@ -11,19 +20,6 @@
 - 新增朋友圈功能：浏览朋友圈动态、发布图文动态、点赞互动
 - 新增聊天记录搜索：支持关键词搜索聊天内容
 - 优化首页导航：添加朋友圈入口
-
-### v0.1.2 (2026-03-29)
-
-**PATCH版本 - 修复导入冲突问题**
-
-- 移除ChatDetailScreen.kt中重复的Alignment导入
-
-### v0.1.1 (2026-03-29)
-
-**PATCH版本 - 修复Build失败问题**
-
-- 修复ChatDetailScreen.kt中Alignment.Bottom引用错误
-- 修复ProfileScreen.kt中Icons.Outlined.Chat引用错误
 
 ## 功能特性
 
@@ -56,11 +52,8 @@
 <details>
 <summary>早期版本</summary>
 
-### v0.1.2
-PATCH版本，详见上方版本说明
-
-### v0.1.1
-PATCH版本，详见上方版本说明
+### v0.1.2 - v0.2.0
+功能版本迭代，包含朋友圈、聊天记录搜索等功能的开发和问题修复
 
 ### v0.1.0
 初始版本，搭建项目基础框架，实现仿微信基本UI界面
@@ -105,6 +98,7 @@ app/src/main/java/app/chat_m25/
 ├── domain/             # 领域层
 │   └── model/          # 领域模型
 └── ui/                 # UI层
+    ├── components/     # 公共组件
     ├── screens/        # 页面
     │   ├── home/      # 首页
     │   ├── contacts/   # 通讯录
