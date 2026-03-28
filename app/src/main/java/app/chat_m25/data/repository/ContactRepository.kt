@@ -2,6 +2,8 @@ package app.chat_m25.data.repository
 
 import app.chat_m25.data.local.dao.ContactDao
 import app.chat_m25.data.local.entity.ContactEntity
+import app.chat_m25.data.mapper.EntityMapper.toDomain
+import app.chat_m25.data.mapper.EntityMapper.toEntity
 import app.chat_m25.domain.model.Contact
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -50,22 +52,4 @@ class ContactRepository @Inject constructor(
     suspend fun toggleStarred(contactId: Long, isStarred: Boolean) {
         contactDao.updateStarred(contactId, isStarred)
     }
-
-    private fun ContactEntity.toDomain() = Contact(
-        id = id,
-        name = name,
-        avatar = avatar,
-        remark = remark,
-        phone = phone,
-        isStarred = isStarred
-    )
-
-    private fun Contact.toEntity() = ContactEntity(
-        id = id,
-        name = name,
-        avatar = avatar,
-        remark = remark,
-        phone = phone,
-        isStarred = isStarred
-    )
 }

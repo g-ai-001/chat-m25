@@ -60,10 +60,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.chat_m25.domain.model.Moment
 import app.chat_m25.ui.components.Avatar
+import app.chat_m25.ui.components.CommonTopBar
 import app.chat_m25.ui.components.DateTimeFormatter
 import app.chat_m25.ui.components.EmptyState
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MomentsScreen(
     onBack: () -> Unit,
@@ -73,21 +73,9 @@ fun MomentsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("朋友圈", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "返回",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
+            CommonTopBar(
+                title = "朋友圈",
+                onBackClick = onBack
             )
         },
         floatingActionButton = {

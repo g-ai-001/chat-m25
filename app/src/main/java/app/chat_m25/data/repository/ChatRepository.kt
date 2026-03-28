@@ -4,9 +4,10 @@ import app.chat_m25.data.local.dao.ChatSessionDao
 import app.chat_m25.data.local.dao.MessageDao
 import app.chat_m25.data.local.entity.ChatSessionEntity
 import app.chat_m25.data.local.entity.MessageEntity
+import app.chat_m25.data.mapper.EntityMapper.toDomain
+import app.chat_m25.data.mapper.EntityMapper.toEntity
 import app.chat_m25.domain.model.ChatSession
 import app.chat_m25.domain.model.Message
-import app.chat_m25.domain.model.MessageStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -89,38 +90,4 @@ class ChatRepository @Inject constructor(
             entities.map { it.toDomain() }
         }
     }
-
-    private fun ChatSessionEntity.toDomain() = ChatSession(
-        id = id,
-        name = name,
-        avatar = avatar,
-        lastMessage = lastMessage,
-        lastMessageTime = lastMessageTime,
-        unreadCount = unreadCount,
-        isPinned = isPinned,
-        doNotDisturb = doNotDisturb,
-        backgroundColor = backgroundColor
-    )
-
-    private fun ChatSession.toEntity() = ChatSessionEntity(
-        id = id,
-        name = name,
-        avatar = avatar,
-        lastMessage = lastMessage,
-        lastMessageTime = lastMessageTime,
-        unreadCount = unreadCount,
-        isPinned = isPinned,
-        doNotDisturb = doNotDisturb,
-        backgroundColor = backgroundColor
-    )
-
-    private fun MessageEntity.toDomain() = Message(
-        id = id,
-        chatId = chatId,
-        content = content,
-        isFromMe = isFromMe,
-        timestamp = timestamp,
-        status = MessageStatus.valueOf(status),
-        isFavorite = isFavorite
-    )
 }

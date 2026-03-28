@@ -2,10 +2,13 @@ package app.chat_m25.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import app.chat_m25.data.local.ChatDatabase
 import app.chat_m25.data.local.dao.ChatSessionDao
 import app.chat_m25.data.local.dao.ContactDao
 import app.chat_m25.data.local.dao.MessageDao
+import app.chat_m25.data.local.dao.MomentDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,6 +20,12 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
 
+    private val MIGRATION_1_2 = object : Migration(1, 2) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Add migrations if needed
+        }
+    }
+
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): ChatDatabase {
@@ -24,7 +33,9 @@ object DatabaseModule {
             context,
             ChatDatabase::class.java,
             "chat_m25_database"
-        ).build()
+        )
+            .addMigrations(MIGRATION_1_2)
+            .build()
     }
 
     @Provides
@@ -43,5 +54,11 @@ object DatabaseModule {
     @Singleton
     fun provideContactDao(database: ChatDatabase): ContactDao {
         return database.contactDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideMomentDao(database: ChatDatabase): MomentDao {
+        return database.momentDao()
     }
 }

@@ -27,7 +27,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ColorLens
@@ -38,15 +37,12 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -63,11 +59,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.chat_m25.domain.model.Message
 import app.chat_m25.ui.components.Avatar
+import app.chat_m25.ui.components.CommonTopBar
 import app.chat_m25.ui.components.DateTimeFormatter
 import app.chat_m25.ui.components.EmptyState
 import app.chat_m25.ui.components.EmojiPicker
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatDetailScreen(
     chatId: Long,
@@ -87,26 +83,9 @@ fun ChatDetailScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = uiState.chatSession?.name ?: "聊天",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "返回",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                ),
+            CommonTopBar(
+                title = uiState.chatSession?.name ?: "聊天",
+                onBackClick = onBack,
                 actions = {
                     IconButton(onClick = { viewModel.addDemoMessages() }) {
                         Icon(
@@ -182,7 +161,6 @@ fun ChatDetailScreen(
                 }
             }
 
-            // Background picker
             AnimatedVisibility(
                 visible = uiState.showBackgroundPicker,
                 enter = slideInVertically { it },
@@ -195,7 +173,6 @@ fun ChatDetailScreen(
                 )
             }
 
-            // Input area
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -248,7 +225,6 @@ fun ChatDetailScreen(
                 }
             }
 
-            // Emoji picker
             AnimatedVisibility(
                 visible = uiState.showEmojiPicker,
                 enter = slideInVertically { it },

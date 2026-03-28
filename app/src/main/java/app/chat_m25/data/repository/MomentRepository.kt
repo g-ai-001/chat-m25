@@ -2,6 +2,8 @@ package app.chat_m25.data.repository
 
 import app.chat_m25.data.local.dao.MomentDao
 import app.chat_m25.data.local.entity.MomentEntity
+import app.chat_m25.data.mapper.EntityMapper.toDomain
+import app.chat_m25.data.mapper.EntityMapper.toEntity
 import app.chat_m25.domain.model.Moment
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -42,26 +44,5 @@ class MomentRepository @Inject constructor(
         val newLiked = !moment.isLiked
         val delta = if (newLiked) 1 else -1
         momentDao.updateLikeStatus(id, newLiked, delta)
-    }
-
-    private fun MomentEntity.toDomain(): Moment {
-        val imagesList = try {
-            val jsonArray = JSONArray(images)
-            (0 until jsonArray.length()).map { jsonArray.getString(it) }
-        } catch (e: Exception) {
-            emptyList()
-        }
-        return Moment(
-            id = id,
-            userId = userId,
-            userName = userName,
-            userAvatar = userAvatar,
-            content = content,
-            images = imagesList,
-            timestamp = timestamp,
-            likeCount = likeCount,
-            commentCount = commentCount,
-            isLiked = isLiked
-        )
     }
 }

@@ -42,7 +42,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
-@OptIn(ExperimentalMaterial3Api::class)
+import app.chat_m25.ui.components.CommonTopBar
+
 @Composable
 fun ProfileScreen(
     onSettingsClick: () -> Unit = {},
@@ -50,12 +51,8 @@ fun ProfileScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("我", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
+            CommonTopBar(
+                title = "我"
             )
         }
     ) { paddingValues ->

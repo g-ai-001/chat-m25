@@ -46,9 +46,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.chat_m25.ui.components.Avatar
+import app.chat_m25.ui.components.CommonTopBar
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContactDetailScreen(
     onBack: () -> Unit,
@@ -61,21 +61,9 @@ fun ContactDetailScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("联系人详情", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "返回",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                ),
+            CommonTopBar(
+                title = "联系人详情",
+                onBackClick = onBack,
                 actions = {
                     IconButton(onClick = { showMenu = true }) {
                         Icon(

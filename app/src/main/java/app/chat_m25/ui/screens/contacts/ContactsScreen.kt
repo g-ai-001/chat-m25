@@ -38,9 +38,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.chat_m25.domain.model.Contact
 import app.chat_m25.ui.components.Avatar
+import app.chat_m25.ui.components.CommonTopBar
 import app.chat_m25.ui.components.EmptyState
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContactsScreen(
     onContactClick: (Long) -> Unit = {},
@@ -50,12 +50,8 @@ fun ContactsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("通讯录", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                ),
+            CommonTopBar(
+                title = "通讯录",
                 actions = {
                     IconButton(onClick = { }) {
                         Icon(
