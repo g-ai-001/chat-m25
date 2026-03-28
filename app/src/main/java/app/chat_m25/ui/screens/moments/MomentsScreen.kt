@@ -59,9 +59,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.chat_m25.domain.model.Moment
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import app.chat_m25.ui.components.Avatar
+import app.chat_m25.ui.components.DateTimeFormatter
+import app.chat_m25.ui.components.EmptyState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -106,19 +106,10 @@ fun MomentsScreen(
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        "暂无朋友圈动态",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        "点击上方+发布朋友圈",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                EmptyState(
+                    title = "暂无朋友圈动态",
+                    subtitle = "点击上方+发布朋友圈"
+                )
             }
         } else {
             LazyColumn(
@@ -175,19 +166,10 @@ fun MomentItem(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = moment.userName.firstOrNull()?.toString() ?: "?",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
+                Avatar(
+                    name = moment.userName,
+                    size = 44.dp
+                )
 
                 Spacer(modifier = Modifier.width(12.dp))
 
@@ -220,7 +202,7 @@ fun MomentItem(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = formatTime(moment.timestamp),
+                            text = DateTimeFormatter.formatMomentTime(moment.timestamp),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -398,20 +380,4 @@ fun PublishMomentDialog(
             }
         }
     )
-}
-
-private fun formatTime(timestamp: Long): String {
-    val now = System.currentTimeMillis()
-    val diff = now - timestamp
-    val oneMinute = 60 * 1000
-    val oneHour = 60 * oneMinute
-    val oneDay = 24 * oneHour
-
-    return when {
-        diff < oneMinute -> "刚刚"
-        diff < oneHour -> "${diff / oneMinute}分钟前"
-        diff < oneDay -> "${diff / oneHour}小时前"
-        diff < 7 * oneDay -> "${diff / oneDay}天前"
-        else -> SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(timestamp))
-    }
 }

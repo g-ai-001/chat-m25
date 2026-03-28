@@ -44,9 +44,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.chat_m25.domain.model.Message
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import app.chat_m25.ui.components.Avatar
+import app.chat_m25.ui.components.DateTimeFormatter
+import app.chat_m25.ui.components.EmptyState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -118,19 +118,10 @@ fun ChatDetailScreen(
                         .fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            "暂无消息",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            "点击上方+发送演示消息",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    EmptyState(
+                        title = "暂无消息",
+                        subtitle = "点击上方+发送演示消息"
+                    )
                 }
             } else {
                 LazyColumn(
@@ -203,19 +194,10 @@ fun MessageBubble(message: Message) {
             horizontalArrangement = if (message.isFromMe) Arrangement.End else Arrangement.Start
         ) {
             if (!message.isFromMe) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "?",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
+                Avatar(
+                    name = "?",
+                    size = 36.dp
+                )
                 Spacer(modifier = Modifier.width(8.dp))
             }
 
@@ -250,26 +232,17 @@ fun MessageBubble(message: Message) {
 
             if (message.isFromMe) {
                 Spacer(modifier = Modifier.width(8.dp))
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "我",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
+                Avatar(
+                    name = "我",
+                    size = 36.dp
+                )
             }
         }
 
         Spacer(modifier = Modifier.height(2.dp))
 
         Text(
-            text = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(message.timestamp)),
+            text = DateTimeFormatter.formatTime(message.timestamp),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
         )

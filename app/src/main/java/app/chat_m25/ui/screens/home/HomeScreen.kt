@@ -1,6 +1,5 @@
 package app.chat_m25.ui.screens.home
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,11 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -38,7 +35,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -47,9 +43,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.chat_m25.domain.model.ChatSession
 import app.chat_m25.domain.model.Message
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import app.chat_m25.ui.components.Avatar
+import app.chat_m25.ui.components.DateTimeFormatter
+import app.chat_m25.ui.components.EmptyState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -191,24 +187,10 @@ fun SearchContent(
     onResultClick: (Message) -> Unit
 ) {
     if (results.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    "暂无搜索结果",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    "尝试输入其他关键词",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
+        EmptyState(
+            title = "暂无搜索结果",
+            subtitle = "尝试输入其他关键词"
+        )
     } else {
         LazyColumn {
             items(results, key = { it.id }) { message ->
@@ -237,19 +219,10 @@ fun SearchResultItem(
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = if (message.isFromMe) "我" else "?",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        }
+        Avatar(
+            name = if (message.isFromMe) "我" else "?",
+            size = 40.dp
+        )
 
         Spacer(modifier = Modifier.width(12.dp))
 
@@ -262,7 +235,7 @@ fun SearchResultItem(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date(message.timestamp)),
+                text = DateTimeFormatter.formatFullDateTime(message.timestamp),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -278,24 +251,10 @@ fun ChatListContent(
     onCreateDemo: () -> Unit
 ) {
     if (sessions.isEmpty() && !isLoading) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    "暂无聊天记录",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    "点击上方+创建演示数据",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
+        EmptyState(
+            title = "暂无聊天记录",
+            subtitle = "点击上方+创建演示数据"
+        )
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize()
@@ -326,19 +285,10 @@ fun ChatSessionItem(
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = session.name.firstOrNull()?.toString() ?: "?",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        }
+        Avatar(
+            name = session.name,
+            size = 48.dp
+        )
 
         Spacer(modifier = Modifier.width(12.dp))
 
@@ -359,7 +309,7 @@ fun ChatSessionItem(
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    text = formatTime(session.lastMessageTime),
+                    text = DateTimeFormatter.formatChatTime(session.lastMessageTime),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -389,17 +339,5 @@ fun ChatSessionItem(
                 }
             }
         }
-    }
-}
-
-private fun formatTime(timestamp: Long): String {
-    val now = System.currentTimeMillis()
-    val diff = now - timestamp
-    val oneDay = 24 * 60 * 60 * 1000
-
-    return when {
-        diff < oneDay -> SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))
-        diff < 7 * oneDay -> SimpleDateFormat("EEE", Locale.getDefault()).format(Date(timestamp))
-        else -> SimpleDateFormat("yyyy/MM/dd", Locale.getDefault()).format(Date(timestamp))
     }
 }
