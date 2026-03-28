@@ -17,7 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
-import androidx.compose.material.icons.automirrored.outlined.ChatBubbleOutline
+import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.QrCode
@@ -113,7 +113,7 @@ fun ProfileScreen() {
 
             ProfileMenuItem(
                 icon = Icons.AutoMirrored.Filled.Chat,
-                iconOutline = Icons.AutoMirrored.Outlined.ChatBubbleOutline,
+                iconOutline = Icons.Outlined.Chat,
                 title = "朋友圈",
                 onClick = { }
             )

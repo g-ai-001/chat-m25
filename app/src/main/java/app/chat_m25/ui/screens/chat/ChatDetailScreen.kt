@@ -199,7 +199,7 @@ fun MessageBubble(message: Message) {
         horizontalAlignment = if (message.isFromMe) Alignment.End else Alignment.Start
     ) {
         Row(
-            verticalAlignment = Bottom,
+            verticalAlignment = Alignment.Bottom,
             horizontalArrangement = if (message.isFromMe) Arrangement.End else Arrangement.Start
         ) {
             if (!message.isFromMe) {
