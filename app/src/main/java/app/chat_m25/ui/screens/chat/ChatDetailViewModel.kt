@@ -17,7 +17,8 @@ data class ChatDetailUiState(
     val chatSession: ChatSession? = null,
     val messages: List<Message> = emptyList(),
     val inputText: String = "",
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val showEmojiPicker: Boolean = false
 )
 
 @HiltViewModel
@@ -73,6 +74,21 @@ class ChatDetailViewModel @Inject constructor(
             chatRepository.sendMessage(chatId, text)
             _uiState.value = _uiState.value.copy(inputText = "")
         }
+    }
+
+    fun toggleEmojiPicker() {
+        _uiState.value = _uiState.value.copy(showEmojiPicker = !_uiState.value.showEmojiPicker)
+    }
+
+    fun onEmojiSelected(emoji: String) {
+        _uiState.value = _uiState.value.copy(
+            inputText = _uiState.value.inputText + emoji,
+            showEmojiPicker = false
+        )
+    }
+
+    fun hideEmojiPicker() {
+        _uiState.value = _uiState.value.copy(showEmojiPicker = false)
     }
 
     fun addDemoMessages() {

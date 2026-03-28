@@ -30,6 +30,7 @@ import app.chat_m25.ui.screens.contacts.ContactsScreen
 import app.chat_m25.ui.screens.home.HomeScreen
 import app.chat_m25.ui.screens.moments.MomentsScreen
 import app.chat_m25.ui.screens.profile.ProfileScreen
+import app.chat_m25.ui.screens.settings.SettingsScreen
 
 sealed class Screen(
     val route: String,
@@ -46,6 +47,7 @@ object Routes {
     const val CHAT_DETAIL = "chat/{chatId}"
     fun chatDetail(chatId: Long) = "chat/$chatId"
     const val MOMENTS = "moments"
+    const val SETTINGS = "settings"
 }
 
 val bottomNavItems = listOf(Screen.Home, Screen.Contacts, Screen.Profile)
@@ -109,7 +111,9 @@ fun ChatApp() {
                 ContactsScreen()
             }
             composable(Screen.Profile.route) {
-                ProfileScreen()
+                ProfileScreen(
+                    onSettingsClick = { navController.navigate(Routes.SETTINGS) }
+                )
             }
             composable(
                 route = Routes.CHAT_DETAIL,
@@ -123,6 +127,11 @@ fun ChatApp() {
             }
             composable(Routes.MOMENTS) {
                 MomentsScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Routes.SETTINGS) {
+                SettingsScreen(
                     onBack = { navController.popBackStack() }
                 )
             }

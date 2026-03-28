@@ -44,7 +44,9 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(
+    onSettingsClick: () -> Unit = {}
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -140,7 +142,7 @@ fun ProfileScreen() {
                 icon = Icons.Default.Settings,
                 iconOutline = Icons.Default.Settings,
                 title = "设置",
-                onClick = { }
+                onClick = onSettingsClick
             )
         }
     }

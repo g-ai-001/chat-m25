@@ -1,5 +1,8 @@
 package app.chat_m25.ui.screens.chat
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.EmojiEmotions
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -47,6 +51,7 @@ import app.chat_m25.domain.model.Message
 import app.chat_m25.ui.components.Avatar
 import app.chat_m25.ui.components.DateTimeFormatter
 import app.chat_m25.ui.components.EmptyState
+import app.chat_m25.ui.components.EmojiPicker
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -146,6 +151,17 @@ fun ChatDetailScreen(
                     .padding(horizontal = 8.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                IconButton(onClick = { viewModel.toggleEmojiPicker() }) {
+                    Icon(
+                        Icons.Default.EmojiEmotions,
+                        contentDescription = "表情",
+                        tint = if (uiState.showEmojiPicker)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
                 OutlinedTextField(
                     value = uiState.inputText,
                     onValueChange = { viewModel.updateInputText(it) },
@@ -178,6 +194,18 @@ fun ChatDetailScreen(
                             MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+            }
+
+            // Emoji picker
+            AnimatedVisibility(
+                visible = uiState.showEmojiPicker,
+                enter = slideInVertically { it },
+                exit = slideOutVertically { it }
+            ) {
+                EmojiPicker(
+                    onEmojiSelected = { viewModel.onEmojiSelected(it) },
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
