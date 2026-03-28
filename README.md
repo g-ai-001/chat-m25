@@ -4,6 +4,13 @@
 
 ## 最新版本
 
+### v0.1.1 (2026-03-29)
+
+**PATCH版本 - 修复Build失败问题**
+
+- 修复ChatDetailScreen.kt中Alignment.Bottom引用错误
+- 修复ProfileScreen.kt中Icons.Outlined.Chat引用错误
+
 ### v0.1.0 (2026-03-29)
 
 **初始版本**
