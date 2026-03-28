@@ -19,9 +19,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ChatBubble
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Badge
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -86,7 +85,7 @@ fun HomeScreen(
                         }
                         IconButton(onClick = onMomentsClick) {
                             Icon(
-                                Icons.AutoMirrored.Filled.ChatBubble,
+                                Icons.Filled.People,
                                 contentDescription = "朋友圈",
                                 tint = MaterialTheme.colorScheme.onPrimary
                             )
@@ -137,6 +136,7 @@ fun HomeScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchTopBar(
     query: String,
