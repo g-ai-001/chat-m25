@@ -1,6 +1,7 @@
 package app.chat_m25
 
 import android.app.Application
+import android.content.Context
 import app.chat_m25.domain.repository.FileLogger
 import app.chat_m25.domain.repository.LogLevel
 
@@ -34,3 +35,12 @@ class ChatApplication : Application() {
 
     fun getLogContent(): String = logger.getLogContent()
 }
+
+// Backward compatibility extension functions
+fun Context.log(message: String, level: LogLevel = LogLevel.INFO) {
+    ChatApplication.instance.log(message, level)
+}
+fun Context.logDebug(message: String) = log(message, LogLevel.DEBUG)
+fun Context.logInfo(message: String) = log(message, LogLevel.INFO)
+fun Context.logWarn(message: String) = log(message, LogLevel.WARN)
+fun Context.logError(message: String, throwable: Throwable? = null) = log(message, LogLevel.ERROR, throwable)

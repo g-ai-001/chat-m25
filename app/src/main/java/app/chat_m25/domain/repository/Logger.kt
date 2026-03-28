@@ -88,7 +88,3 @@ class FileLogger @Inject constructor(
 enum class LogLevel {
     DEBUG, INFO, WARN, ERROR
 }
-
-fun Context.log(message: String, level: LogLevel = LogLevel.INFO) {
-    // Backward compatibility extension
-}
