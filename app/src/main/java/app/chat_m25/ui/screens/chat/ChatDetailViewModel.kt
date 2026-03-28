@@ -122,4 +122,16 @@ class ChatDetailViewModel @Inject constructor(
             }
         }
     }
+
+    fun deleteMessage(messageId: Long) {
+        viewModelScope.launch {
+            chatRepository.deleteMessage(messageId)
+        }
+    }
+
+    fun toggleFavorite(messageId: Long, isFavorite: Boolean) {
+        viewModelScope.launch {
+            chatRepository.toggleFavorite(messageId, !isFavorite)
+        }
+    }
 }

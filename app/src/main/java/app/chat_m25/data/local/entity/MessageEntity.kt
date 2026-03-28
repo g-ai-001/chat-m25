@@ -24,5 +24,6 @@ data class MessageEntity(
     val content: String,
     val isFromMe: Boolean,
     val timestamp: Long = System.currentTimeMillis(),
-    val status: String = "SENT"
+    val status: String = "SENT",
+    val isFavorite: Boolean = false
 )

@@ -6,6 +6,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,8 +30,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ColorLens
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EmojiEmotions
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -168,7 +172,11 @@ fun ChatDetailScreen(
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp)
                 ) {
                     items(uiState.messages, key = { it.id }) { message ->
-                        MessageBubble(message = message)
+                        MessageBubble(
+                            message = message,
+                            onDelete = { viewModel.deleteMessage(it) },
+                            onToggleFavorite = { id, isFav -> viewModel.toggleFavorite(id, isFav) }
+                        )
                     }
                 }
             }
@@ -254,8 +262,15 @@ fun ChatDetailScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MessageBubble(message: Message) {
+fun MessageBubble(
+    message: Message,
+    onDelete: (Long) -> Unit,
+    onToggleFavorite: (Long, Boolean) -> Unit
+) {
+    var showMenu by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = if (message.isFromMe) Alignment.End else Alignment.Start
@@ -272,33 +287,68 @@ fun MessageBubble(message: Message) {
                 Spacer(modifier = Modifier.width(8.dp))
             }
 
-            Box(
-                modifier = Modifier
-                    .widthIn(max = 280.dp)
-                    .clip(
-                        RoundedCornerShape(
-                            topStart = 16.dp,
-                            topEnd = 16.dp,
-                            bottomStart = if (message.isFromMe) 16.dp else 4.dp,
-                            bottomEnd = if (message.isFromMe) 4.dp else 16.dp
+            Box {
+                Box(
+                    modifier = Modifier
+                        .widthIn(max = 280.dp)
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = 16.dp,
+                                topEnd = 16.dp,
+                                bottomStart = if (message.isFromMe) 16.dp else 4.dp,
+                                bottomEnd = if (message.isFromMe) 4.dp else 16.dp
+                            )
                         )
-                    )
-                    .background(
-                        if (message.isFromMe)
-                            MaterialTheme.colorScheme.primary
+                        .background(
+                            if (message.isFromMe)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.surfaceVariant
+                        )
+                        .combinedClickable(
+                            onClick = { },
+                            onLongClick = { showMenu = true }
+                        )
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = message.content,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (message.isFromMe)
+                            MaterialTheme.colorScheme.onPrimary
                         else
-                            MaterialTheme.colorScheme.surfaceVariant
+                            MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    text = message.content,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (message.isFromMe)
-                        MaterialTheme.colorScheme.onPrimary
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                }
+
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(if (message.isFavorite) "取消收藏" else "收藏") },
+                        onClick = {
+                            onToggleFavorite(message.id, message.isFavorite)
+                            showMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(
+                                if (message.isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
+                                contentDescription = null
+                            )
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("删除") },
+                        onClick = {
+                            onDelete(message.id)
+                            showMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.Delete, contentDescription = null)
+                        }
+                    )
+                }
             }
 
             if (message.isFromMe) {

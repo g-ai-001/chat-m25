@@ -43,6 +43,7 @@ import app.chat_m25.ui.components.EmptyState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContactsScreen(
+    onContactClick: (Long) -> Unit = {},
     viewModel: ContactsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -103,7 +104,7 @@ fun ContactsScreen(
                             )
                         }
                         items(uiState.starredContacts, key = { "starred_${it.id}" }) { contact ->
-                            ContactItem(contact = contact, onClick = { })
+                            ContactItem(contact = contact, onClick = { onContactClick(contact.id) })
                         }
                     }
 
@@ -116,7 +117,7 @@ fun ContactsScreen(
                         )
                     }
                     items(uiState.contacts, key = { it.id }) { contact ->
-                        ContactItem(contact = contact, onClick = { })
+                        ContactItem(contact = contact, onClick = { onContactClick(contact.id) })
                         HorizontalDivider(
                             modifier = Modifier.padding(start = 72.dp),
                             color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)

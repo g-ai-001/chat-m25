@@ -4,6 +4,14 @@
 
 ## 最新版本
 
+### v0.5.0 (2026-03-29)
+
+**MINOR版本 - 完善用户交互功能**
+
+- 新增联系人详情界面：点击联系人可查看详情、发起聊天、设置星标
+- 新增收藏功能界面：收藏/取消收藏消息，收藏列表滑动删除
+- 新增聊天消息删除：长按消息可删除或收藏
+
 ### v0.4.0 (2026-03-29)
 
 **MINOR版本 - 聊天功能增强**
@@ -98,8 +106,8 @@ git commit -m "feat: 新功能描述"
 git push origin main
 
 # 创建版本标签触发构建
-git tag v0.4.0 -m "0.4.0 新功能版本"
-git push origin v0.4.0
+git tag v0.5.0 -m "0.5.0 新功能版本"
+git push origin v0.5.0
 ```
 
 ## 项目结构
@@ -119,6 +127,7 @@ app/src/main/java/app/chat_m25/
     ├── screens/        # 页面
     │   ├── home/      # 首页
     │   ├── contacts/   # 通讯录
+    │   ├── favorites/  # 收藏
     │   ├── profile/    # 个人中心
     │   ├── chat/      # 聊天详情
     │   └── moments/    # 朋友圈

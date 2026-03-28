@@ -6,7 +6,8 @@ data class Message(
     val content: String,
     val isFromMe: Boolean,
     val timestamp: Long = System.currentTimeMillis(),
-    val status: MessageStatus = MessageStatus.SENT
+    val status: MessageStatus = MessageStatus.SENT,
+    val isFavorite: Boolean = false
 )
 
 enum class MessageStatus {

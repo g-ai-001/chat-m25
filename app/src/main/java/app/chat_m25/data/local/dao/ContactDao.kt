@@ -31,4 +31,7 @@ interface ContactDao {
 
     @Delete
     suspend fun deleteContact(contact: ContactEntity)
+
+    @Query("UPDATE contacts SET isStarred = :isStarred WHERE id = :contactId")
+    suspend fun updateStarred(contactId: Long, isStarred: Boolean)
 }

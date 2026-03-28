@@ -76,6 +76,20 @@ class ChatRepository @Inject constructor(
         chatSessionDao.updateBackgroundColor(chatId, color)
     }
 
+    suspend fun deleteMessage(messageId: Long) {
+        messageDao.deleteMessageById(messageId)
+    }
+
+    suspend fun toggleFavorite(messageId: Long, isFavorite: Boolean) {
+        messageDao.updateFavorite(messageId, isFavorite)
+    }
+
+    fun getFavoriteMessages(): Flow<List<Message>> {
+        return messageDao.getFavoriteMessages().map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
     private fun ChatSessionEntity.toDomain() = ChatSession(
         id = id,
         name = name,
@@ -106,6 +120,7 @@ class ChatRepository @Inject constructor(
         content = content,
         isFromMe = isFromMe,
         timestamp = timestamp,
-        status = MessageStatus.valueOf(status)
+        status = MessageStatus.valueOf(status),
+        isFavorite = isFavorite
     )
 }

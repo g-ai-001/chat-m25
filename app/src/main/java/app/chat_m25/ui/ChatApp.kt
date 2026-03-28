@@ -26,7 +26,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import app.chat_m25.ui.screens.chat.ChatDetailScreen
+import app.chat_m25.ui.screens.contacts.ContactDetailScreen
 import app.chat_m25.ui.screens.contacts.ContactsScreen
+import app.chat_m25.ui.screens.favorites.FavoritesScreen
 import app.chat_m25.ui.screens.home.HomeScreen
 import app.chat_m25.ui.screens.moments.MomentsScreen
 import app.chat_m25.ui.screens.profile.ProfileScreen
@@ -48,6 +50,9 @@ object Routes {
     fun chatDetail(chatId: Long) = "chat/$chatId"
     const val MOMENTS = "moments"
     const val SETTINGS = "settings"
+    const val CONTACT_DETAIL = "contact/{contactId}"
+    fun contactDetail(contactId: Long) = "contact/$contactId"
+    const val FAVORITES = "favorites"
 }
 
 val bottomNavItems = listOf(Screen.Home, Screen.Contacts, Screen.Profile)
@@ -108,11 +113,16 @@ fun ChatApp() {
                 )
             }
             composable(Screen.Contacts.route) {
-                ContactsScreen()
+                ContactsScreen(
+                    onContactClick = { contactId ->
+                        navController.navigate(Routes.contactDetail(contactId))
+                    }
+                )
             }
             composable(Screen.Profile.route) {
                 ProfileScreen(
-                    onSettingsClick = { navController.navigate(Routes.SETTINGS) }
+                    onSettingsClick = { navController.navigate(Routes.SETTINGS) },
+                    onFavoritesClick = { navController.navigate(Routes.FAVORITES) }
                 )
             }
             composable(
@@ -133,6 +143,28 @@ fun ChatApp() {
             composable(Routes.SETTINGS) {
                 SettingsScreen(
                     onBack = { navController.popBackStack() }
+                )
+            }
+            composable(
+                route = Routes.CONTACT_DETAIL,
+                arguments = listOf(navArgument("contactId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val contactId = backStackEntry.arguments?.getLong("contactId") ?: 0L
+                ContactDetailScreen(
+                    onBack = { navController.popBackStack() },
+                    onStartChat = { chatId ->
+                        navController.navigate(Routes.chatDetail(chatId)) {
+                            popUpTo(Screen.Home.route)
+                        }
+                    }
+                )
+            }
+            composable(Routes.FAVORITES) {
+                FavoritesScreen(
+                    onBack = { navController.popBackStack() },
+                    onChatClick = { chatId ->
+                        navController.navigate(Routes.chatDetail(chatId))
+                    }
                 )
             }
         }

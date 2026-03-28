@@ -19,8 +19,17 @@ interface MessageDao {
     @Delete
     suspend fun deleteMessage(message: MessageEntity)
 
+    @Query("DELETE FROM messages WHERE id = :messageId")
+    suspend fun deleteMessageById(messageId: Long)
+
     @Query("DELETE FROM messages WHERE chatId = :chatId")
     suspend fun deleteMessagesByChatId(chatId: Long)
+
+    @Query("UPDATE messages SET isFavorite = :isFavorite WHERE id = :messageId")
+    suspend fun updateFavorite(messageId: Long, isFavorite: Boolean)
+
+    @Query("SELECT * FROM messages WHERE isFavorite = 1 ORDER BY timestamp DESC")
+    fun getFavoriteMessages(): Flow<List<MessageEntity>>
 
     @Query("SELECT * FROM messages WHERE content LIKE '%' || :keyword || '%' ORDER BY timestamp DESC")
     fun searchMessages(keyword: String): Flow<List<MessageEntity>>

@@ -47,6 +47,10 @@ class ContactRepository @Inject constructor(
         contactDao.deleteContact(contact.toEntity())
     }
 
+    suspend fun toggleStarred(contactId: Long, isStarred: Boolean) {
+        contactDao.updateStarred(contactId, isStarred)
+    }
+
     private fun ContactEntity.toDomain() = Contact(
         id = id,
         name = name,

@@ -45,7 +45,8 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
-    onSettingsClick: () -> Unit = {}
+    onSettingsClick: () -> Unit = {},
+    onFavoritesClick: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -125,7 +126,7 @@ fun ProfileScreen(
                 icon = Icons.Filled.Star,
                 iconOutline = Icons.Outlined.Star,
                 title = "收藏",
-                onClick = { }
+                onClick = onFavoritesClick
             )
 
             ProfileMenuItem(
