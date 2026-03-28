@@ -43,4 +43,6 @@ fun Context.log(message: String, level: LogLevel = LogLevel.INFO) {
 fun Context.logDebug(message: String) = log(message, LogLevel.DEBUG)
 fun Context.logInfo(message: String) = log(message, LogLevel.INFO)
 fun Context.logWarn(message: String) = log(message, LogLevel.WARN)
-fun Context.logError(message: String, throwable: Throwable? = null) = log(message, LogLevel.ERROR, throwable)
+fun Context.logError(message: String, throwable: Throwable? = null) {
+    ChatApplication.instance.log(message, LogLevel.ERROR, throwable)
+}
