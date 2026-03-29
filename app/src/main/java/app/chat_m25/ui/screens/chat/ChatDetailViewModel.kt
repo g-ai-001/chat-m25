@@ -19,7 +19,10 @@ data class ChatDetailUiState(
     val inputText: String = "",
     val isLoading: Boolean = true,
     val showEmojiPicker: Boolean = false,
-    val showBackgroundPicker: Boolean = false
+    val showBackgroundPicker: Boolean = false,
+    val replyingTo: Message? = null,
+    val showForwardDialog: Boolean = false,
+    val forwardMessage: Message? = null
 )
 
 @HiltViewModel
@@ -132,6 +135,41 @@ class ChatDetailViewModel @Inject constructor(
     fun toggleFavorite(messageId: Long, isFavorite: Boolean) {
         viewModelScope.launch {
             chatRepository.toggleFavorite(messageId, !isFavorite)
+        }
+    }
+
+    fun replyToMessage(message: Message) {
+        _uiState.value = _uiState.value.copy(replyingTo = message)
+    }
+
+    fun cancelReply() {
+        _uiState.value = _uiState.value.copy(replyingTo = null)
+    }
+
+    fun sendReplyMessage() {
+        val text = _uiState.value.inputText.trim()
+        val replyTo = _uiState.value.replyingTo
+        if (text.isBlank() || replyTo == null) return
+
+        viewModelScope.launch {
+            chatRepository.replyMessage(chatId, text, replyTo.id)
+            _uiState.value = _uiState.value.copy(inputText = "", replyingTo = null)
+        }
+    }
+
+    fun showForwardDialog(message: Message) {
+        _uiState.value = _uiState.value.copy(showForwardDialog = true, forwardMessage = message)
+    }
+
+    fun hideForwardDialog() {
+        _uiState.value = _uiState.value.copy(showForwardDialog = false, forwardMessage = null)
+    }
+
+    fun forwardMessageTo(chatId: Long) {
+        val message = _uiState.value.forwardMessage ?: return
+        viewModelScope.launch {
+            chatRepository.forwardMessage(message.id, chatId)
+            hideForwardDialog()
         }
     }
 }

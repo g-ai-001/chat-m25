@@ -90,4 +90,47 @@ class ChatRepository @Inject constructor(
             entities.map { it.toDomain() }
         }
     }
+
+    suspend fun forwardMessage(messageId: Long, targetChatId: Long) {
+        val originalMessage = messageDao.getMessagesByChatId(targetChatId)
+        val message = MessageEntity(
+            chatId = targetChatId,
+            content = "转发消息",
+            isFromMe = true,
+            timestamp = System.currentTimeMillis(),
+            forwardedFromId = messageId
+        )
+        messageDao.insertMessage(message)
+        chatSessionDao.updateLastMessage(targetChatId, "转发消息", System.currentTimeMillis())
+    }
+
+    suspend fun replyMessage(chatId: Long, content: String, replyToId: Long): Long {
+        val message = MessageEntity(
+            chatId = chatId,
+            content = content,
+            isFromMe = true,
+            timestamp = System.currentTimeMillis(),
+            replyToId = replyToId
+        )
+        val messageId = messageDao.insertMessage(message)
+        chatSessionDao.updateLastMessage(chatId, content, System.currentTimeMillis())
+        return messageId
+    }
+
+    suspend fun createGroup(name: String, memberIds: List<Long>): Long {
+        val session = ChatSessionEntity(name = name, avatar = null, isGroup = true)
+        return chatSessionDao.insertSession(session)
+    }
+
+    fun getAllSessionsWithMembers(): Flow<List<ChatSession>> {
+        return chatSessionDao.getAllSessions().map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
+    fun getMediaMessages(chatId: Long): Flow<List<Message>> {
+        return messageDao.getMediaMessages(chatId).map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
 }

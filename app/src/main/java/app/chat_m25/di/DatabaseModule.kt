@@ -26,6 +26,26 @@ object DatabaseModule {
         }
     }
 
+    private val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("ALTER TABLE messages ADD COLUMN replyToId INTEGER")
+            database.execSQL("ALTER TABLE messages ADD COLUMN forwardedFromId INTEGER")
+        }
+    }
+
+    private val MIGRATION_3_4 = object : Migration(3, 4) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("ALTER TABLE chat_sessions ADD COLUMN isGroup INTEGER NOT NULL DEFAULT 0")
+        }
+    }
+
+    private val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("ALTER TABLE messages ADD COLUMN mediaType TEXT")
+            database.execSQL("ALTER TABLE messages ADD COLUMN mediaPath TEXT")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): ChatDatabase {
@@ -34,7 +54,7 @@ object DatabaseModule {
             ChatDatabase::class.java,
             "chat_m25_database"
         )
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
             .build()
     }
 

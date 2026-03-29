@@ -29,20 +29,27 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EmojiEmotions
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Reply
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -155,7 +162,9 @@ fun ChatDetailScreen(
                         MessageBubble(
                             message = message,
                             onDelete = { viewModel.deleteMessage(it) },
-                            onToggleFavorite = { id, isFav -> viewModel.toggleFavorite(id, isFav) }
+                            onToggleFavorite = { id, isFav -> viewModel.toggleFavorite(id, isFav) },
+                            onReply = { viewModel.replyToMessage(it) },
+                            onForward = { viewModel.showForwardDialog(it) }
                         )
                     }
                 }
@@ -171,6 +180,44 @@ fun ChatDetailScreen(
                     onColorSelected = { viewModel.updateBackgroundColor(it) },
                     modifier = Modifier.fillMaxWidth()
                 )
+            }
+
+            AnimatedVisibility(visible = uiState.replyingTo != null) {
+                uiState.replyingTo?.let { replyMessage ->
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Reply,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "回复 ${replyMessage.content.take(20)}${if (replyMessage.content.length > 20) "..." else ""}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            IconButton(onClick = { viewModel.cancelReply() }) {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "取消回复",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             Row(
@@ -203,7 +250,13 @@ fun ChatDetailScreen(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 IconButton(
-                    onClick = { viewModel.sendMessage() },
+                    onClick = {
+                        if (uiState.replyingTo != null) {
+                            viewModel.sendReplyMessage()
+                        } else {
+                            viewModel.sendMessage()
+                        }
+                    },
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
@@ -235,6 +288,14 @@ fun ChatDetailScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
+
+            if (uiState.showForwardDialog && uiState.forwardMessage != null) {
+                ForwardDialog(
+                    message = uiState.forwardMessage!!,
+                    onDismiss = { viewModel.hideForwardDialog() },
+                    onForward = { targetChatId -> viewModel.forwardMessageTo(targetChatId) }
+                )
+            }
         }
     }
 }
@@ -244,7 +305,9 @@ fun ChatDetailScreen(
 fun MessageBubble(
     message: Message,
     onDelete: (Long) -> Unit,
-    onToggleFavorite: (Long, Boolean) -> Unit
+    onToggleFavorite: (Long, Boolean) -> Unit,
+    onReply: (Message) -> Unit,
+    onForward: (Message) -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
@@ -288,20 +351,63 @@ fun MessageBubble(
                         )
                         .padding(horizontal = 12.dp, vertical = 8.dp)
                 ) {
-                    Text(
-                        text = message.content,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = if (message.isFromMe)
-                            MaterialTheme.colorScheme.onPrimary
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Column {
+                        if (message.replyToId != null) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                        RoundedCornerShape(4.dp)
+                                    )
+                                    .padding(4.dp)
+                            ) {
+                                Text(
+                                    text = "回复消息",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (message.isFromMe)
+                                        MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                                    else
+                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+                        Text(
+                            text = message.content,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (message.isFromMe)
+                                MaterialTheme.colorScheme.onPrimary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
 
                 DropdownMenu(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false }
                 ) {
+                    DropdownMenuItem(
+                        text = { Text("回复") },
+                        onClick = {
+                            onReply(message)
+                            showMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.Reply, contentDescription = null)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("转发") },
+                        onClick = {
+                            onForward(message)
+                            showMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.SwapHoriz, contentDescription = null)
+                        }
+                    )
                     DropdownMenuItem(
                         text = { Text(if (message.isFavorite) "取消收藏" else "收藏") },
                         onClick = {
@@ -416,4 +522,46 @@ fun BackgroundPicker(
             }
         }
     }
+}
+
+@Composable
+fun ForwardDialog(
+    message: Message,
+    onDismiss: () -> Unit,
+    onForward: (Long) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("转发消息") },
+        text = {
+            Column {
+                Text(
+                    text = "选择要转发到的聊天：",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "消息内容：${message.content.take(50)}${if (message.content.length > 50) "..." else ""}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "功能开发中，请稍后...",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("确定")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消")
+            }
+        }
+    )
 }

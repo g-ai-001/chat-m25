@@ -33,4 +33,7 @@ interface MessageDao {
 
     @Query("SELECT * FROM messages WHERE content LIKE '%' || :keyword || '%' ORDER BY timestamp DESC")
     fun searchMessages(keyword: String): Flow<List<MessageEntity>>
+
+    @Query("SELECT * FROM messages WHERE chatId = :chatId AND mediaType IS NOT NULL ORDER BY timestamp DESC")
+    fun getMediaMessages(chatId: Long): Flow<List<MessageEntity>>
 }

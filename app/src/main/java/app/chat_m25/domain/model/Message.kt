@@ -7,9 +7,17 @@ data class Message(
     val isFromMe: Boolean,
     val timestamp: Long = System.currentTimeMillis(),
     val status: MessageStatus = MessageStatus.SENT,
-    val isFavorite: Boolean = false
+    val isFavorite: Boolean = false,
+    val replyToId: Long? = null,
+    val forwardedFromId: Long? = null,
+    val mediaType: String? = null,
+    val mediaPath: String? = null
 )
 
 enum class MessageStatus {
     SENDING, SENT, READ
+}
+
+enum class MediaType {
+    IMAGE, VIDEO, FILE, AUDIO
 }

@@ -25,5 +25,9 @@ data class MessageEntity(
     val isFromMe: Boolean,
     val timestamp: Long = System.currentTimeMillis(),
     val status: String = "SENT",
-    val isFavorite: Boolean = false
+    val isFavorite: Boolean = false,
+    val replyToId: Long? = null,
+    val forwardedFromId: Long? = null,
+    val mediaType: String? = null,
+    val mediaPath: String? = null
 )

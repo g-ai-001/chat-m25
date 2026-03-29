@@ -22,7 +22,8 @@ object EntityMapper {
         unreadCount = unreadCount,
         isPinned = isPinned,
         doNotDisturb = doNotDisturb,
-        backgroundColor = backgroundColor
+        backgroundColor = backgroundColor,
+        isGroup = isGroup
     )
 
     fun ChatSession.toEntity() = ChatSessionEntity(
@@ -34,7 +35,8 @@ object EntityMapper {
         unreadCount = unreadCount,
         isPinned = isPinned,
         doNotDisturb = doNotDisturb,
-        backgroundColor = backgroundColor
+        backgroundColor = backgroundColor,
+        isGroup = isGroup
     )
 
     fun MessageEntity.toDomain() = Message(
@@ -44,7 +46,11 @@ object EntityMapper {
         isFromMe = isFromMe,
         timestamp = timestamp,
         status = MessageStatus.valueOf(status),
-        isFavorite = isFavorite
+        isFavorite = isFavorite,
+        replyToId = replyToId,
+        forwardedFromId = forwardedFromId,
+        mediaType = mediaType,
+        mediaPath = mediaPath
     )
 
     fun Message.toEntity() = MessageEntity(
@@ -54,7 +60,11 @@ object EntityMapper {
         isFromMe = isFromMe,
         timestamp = timestamp,
         status = status.name,
-        isFavorite = isFavorite
+        isFavorite = isFavorite,
+        replyToId = replyToId,
+        forwardedFromId = forwardedFromId,
+        mediaType = mediaType,
+        mediaPath = mediaPath
     )
 
     fun ContactEntity.toDomain() = Contact(

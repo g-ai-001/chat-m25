@@ -14,5 +14,6 @@ data class ChatSessionEntity(
     val unreadCount: Int = 0,
     val isPinned: Boolean = false,
     val doNotDisturb: Boolean = false,
-    val backgroundColor: Long = 0xFFFFFFFF
+    val backgroundColor: Long = 0xFFFFFFFF,
+    val isGroup: Boolean = false
 )

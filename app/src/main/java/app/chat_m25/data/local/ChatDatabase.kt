@@ -18,7 +18,7 @@ import app.chat_m25.data.local.entity.MomentEntity
         ContactEntity::class,
         MomentEntity::class
     ],
-    version = 2,
+    version = 5,
     exportSchema = true
 )
 abstract class ChatDatabase : RoomDatabase() {

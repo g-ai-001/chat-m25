@@ -19,6 +19,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.GroupAdd
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.PushPin
@@ -61,9 +62,11 @@ import app.chat_m25.ui.components.EmptyState
 fun HomeScreen(
     onChatClick: (Long) -> Unit,
     onMomentsClick: () -> Unit,
+    onCreateGroupClick: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showMenu by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -95,12 +98,39 @@ fun HomeScreen(
                                 tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }
-                        IconButton(onClick = { viewModel.createDemoSession() }) {
-                            Icon(
-                                Icons.Default.Add,
-                                contentDescription = "新建聊天",
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
+                        Box {
+                            IconButton(onClick = { showMenu = true }) {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = "更多",
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("新建聊天") },
+                                    onClick = {
+                                        viewModel.createDemoSession()
+                                        showMenu = false
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Add, contentDescription = null)
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("创建群聊") },
+                                    onClick = {
+                                        onCreateGroupClick()
+                                        showMenu = false
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.GroupAdd, contentDescription = null)
+                                    }
+                                )
+                            }
                         }
                     }
                 )
