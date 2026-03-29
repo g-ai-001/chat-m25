@@ -22,7 +22,7 @@ enum class NotificationSound(val value: String) {
     POP("气泡"),
     SILENT("静音");
 
-    companionion object {
+    companion object {
         fun fromValue(value: String): NotificationSound = entries.firstOrNull { it.value == value } ?: DEFAULT
     }
 }
