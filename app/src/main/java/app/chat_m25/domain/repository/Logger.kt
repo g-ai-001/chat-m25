@@ -22,7 +22,8 @@ interface Logger {
 
 @Singleton
 class FileLogger @Inject constructor(
-    private val context: Context
+    private val context: Context,
+    private val minimal: Boolean = false
 ) : Logger {
     companion object {
         private const val LOG_FILE_NAME = "chat_m25_log.txt"
@@ -30,25 +31,41 @@ class FileLogger @Inject constructor(
     }
 
     private lateinit var logFile: File
+    private var initFailed = false
 
     init {
         initLogger()
     }
 
     private fun initLogger() {
-        val logDir = context.getExternalFilesDir(null) ?: context.filesDir
-        if (!logDir.exists()) {
-            logDir.mkdirs()
-        }
-        logFile = File(logDir, LOG_FILE_NAME)
+        try {
+            val logDir = context.getExternalFilesDir(null) ?: context.filesDir
+            if (!logDir.exists()) {
+                logDir.mkdirs()
+            }
+            logFile = File(logDir, LOG_FILE_NAME)
 
-        if (logFile.exists() && logFile.length() > MAX_LOG_SIZE) {
-            logFile.delete()
-            logFile.createNewFile()
+            if (logFile.exists() && logFile.length() > MAX_LOG_SIZE) {
+                logFile.delete()
+                logFile.createNewFile()
+            }
+        } catch (e: Exception) {
+            initFailed = true
+            e.printStackTrace()
         }
     }
 
     override fun log(message: String, level: LogLevel, throwable: Throwable?) {
+        if (initFailed && minimal) {
+            // 最小化模式只打印到控制台
+            println("[$level] $message")
+            return
+        }
+
+        if (initFailed) {
+            return
+        }
+
         val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(Date())
         val threadName = Thread.currentThread().name
         val stackTrace = throwable?.let { getStackTrace(it) } ?: ""
@@ -62,19 +79,25 @@ class FileLogger @Inject constructor(
         }
 
         try {
-            logFile.appendText(logMessage)
+            if (::logFile.isInitialized) {
+                logFile.appendText(logMessage)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
-    override fun getLogFilePath(): String = logFile.absolutePath
+    override fun getLogFilePath(): String = if (::logFile.isInitialized) logFile.absolutePath else ""
 
     override fun getLogContent(): String {
-        return try {
-            logFile.readText()
-        } catch (e: Exception) {
-            "无法读取日志文件: ${e.message}"
+        return if (!::logFile.isInitialized || initFailed) {
+            "日志初始化失败"
+        } else {
+            try {
+                logFile.readText()
+            } catch (e: Exception) {
+                "无法读取日志文件: ${e.message}"
+            }
         }
     }
 

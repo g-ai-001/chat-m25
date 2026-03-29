@@ -114,6 +114,13 @@
 - [x] 实现位置分享功能（发送位置给好友）
 - [x] 实现消息提醒设置增强（自定义提示音）
 
+### 0.10.1 (PATCH) - 进行中
+**目标**: 修复点击桌面图标闪退问题
+- [x] 修复FileLogger初始化顺序问题，确保instance先于logger初始化
+- [x] 为ChatApplication添加@HiltAndroidApp注解，使用Hilt管理应用生命周期
+- [x] 为日志系统添加异常处理，防止初始化失败导致崩溃
+- [x] 优化日志扩展函数，使用isInitialized检查避免空指针
+
 ## 技术栈
 - **语言**: Kotlin 2.3.20
 - **构建工具**: Gradle 9.4.1 (Kotlin DSL)
