@@ -2,7 +2,9 @@ package app.chat_m25.ui.screens.moments
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.chat_m25.data.repository.CommentRepository
 import app.chat_m25.data.repository.MomentRepository
+import app.chat_m25.domain.model.Comment
 import app.chat_m25.domain.model.Moment
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,12 +20,17 @@ data class MomentsUiState(
     val isPublishing: Boolean = false,
     val showPublishDialog: Boolean = false,
     val publishContent: String = "",
-    val publishImages: List<String> = emptyList()
+    val publishImages: List<String> = emptyList(),
+    val selectedMomentId: Long? = null,
+    val showCommentDialog: Boolean = false,
+    val commentContent: String = "",
+    val comments: Map<Long, List<Comment>> = emptyMap()
 )
 
 @HiltViewModel
 class MomentsViewModel @Inject constructor(
-    private val momentRepository: MomentRepository
+    private val momentRepository: MomentRepository,
+    private val commentRepository: CommentRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MomentsUiState())
@@ -84,6 +91,50 @@ class MomentsViewModel @Inject constructor(
     fun deleteMoment(momentId: Long) {
         viewModelScope.launch {
             momentRepository.deleteMoment(momentId)
+        }
+    }
+
+    fun showCommentDialog(momentId: Long) {
+        _uiState.update { it.copy(selectedMomentId = momentId, showCommentDialog = true) }
+        loadComments(momentId)
+    }
+
+    fun hideCommentDialog() {
+        _uiState.update { it.copy(showCommentDialog = false, commentContent = "", selectedMomentId = null) }
+    }
+
+    fun updateCommentContent(content: String) {
+        _uiState.update { it.copy(commentContent = content) }
+    }
+
+    fun loadComments(momentId: Long) {
+        viewModelScope.launch {
+            commentRepository.getCommentsByMomentId(momentId).collect { comments ->
+                _uiState.update { state ->
+                    state.copy(comments = state.comments + (momentId to comments))
+                }
+            }
+        }
+    }
+
+    fun addComment(momentId: Long) {
+        val content = _uiState.value.commentContent
+        if (content.isBlank()) return
+
+        viewModelScope.launch {
+            commentRepository.addComment(
+                momentId = momentId,
+                userId = 1,
+                userName = "我",
+                content = content
+            )
+            _uiState.update { it.copy(commentContent = "") }
+        }
+    }
+
+    fun deleteComment(commentId: Long) {
+        viewModelScope.launch {
+            commentRepository.deleteComment(commentId)
         }
     }
 

@@ -145,4 +145,16 @@ class ChatRepository @Inject constructor(
             entities.map { it.toDomain() }
         }
     }
+
+    suspend fun recallMessage(messageId: Long) {
+        messageDao.recallMessage(messageId)
+    }
+
+    suspend fun markMessageAsRead(messageId: Long) {
+        messageDao.updateMessageStatus(messageId, "READ")
+    }
+
+    suspend fun updateMessageSentStatus(messageId: Long) {
+        messageDao.updateMessageStatus(messageId, "SENT")
+    }
 }

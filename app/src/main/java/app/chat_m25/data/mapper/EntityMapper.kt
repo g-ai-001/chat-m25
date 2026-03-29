@@ -1,10 +1,12 @@
 package app.chat_m25.data.mapper
 
 import app.chat_m25.data.local.entity.ChatSessionEntity
+import app.chat_m25.data.local.entity.CommentEntity
 import app.chat_m25.data.local.entity.ContactEntity
 import app.chat_m25.data.local.entity.MessageEntity
 import app.chat_m25.data.local.entity.MomentEntity
 import app.chat_m25.domain.model.ChatSession
+import app.chat_m25.domain.model.Comment
 import app.chat_m25.domain.model.Contact
 import app.chat_m25.domain.model.Message
 import app.chat_m25.domain.model.MessageStatus
@@ -125,4 +127,28 @@ object EntityMapper {
             isLiked = isLiked
         )
     }
+
+    fun CommentEntity.toDomain() = Comment(
+        id = id,
+        momentId = momentId,
+        userId = userId,
+        userName = userName,
+        userAvatar = userAvatar,
+        content = content,
+        timestamp = timestamp,
+        replyToId = replyToId,
+        replyToUserName = replyToUserName
+    )
+
+    fun Comment.toEntity() = CommentEntity(
+        id = id,
+        momentId = momentId,
+        userId = userId,
+        userName = userName,
+        userAvatar = userAvatar,
+        content = content,
+        timestamp = timestamp,
+        replyToId = replyToId,
+        replyToUserName = replyToUserName
+    )
 }

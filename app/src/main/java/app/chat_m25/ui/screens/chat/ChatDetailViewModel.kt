@@ -63,6 +63,10 @@ class ChatDetailViewModel @Inject constructor(
     private fun markAsRead() {
         viewModelScope.launch {
             chatRepository.markAsRead(chatId)
+            val unreadMessages = uiState.value.messages.filter { !it.isFromMe && it.status.name != "READ" }
+            unreadMessages.forEach { message ->
+                chatRepository.markMessageAsRead(message.id)
+            }
         }
     }
 
@@ -170,6 +174,12 @@ class ChatDetailViewModel @Inject constructor(
         viewModelScope.launch {
             chatRepository.forwardMessage(message.id, chatId)
             hideForwardDialog()
+        }
+    }
+
+    fun recallMessage(messageId: Long) {
+        viewModelScope.launch {
+            chatRepository.recallMessage(messageId)
         }
     }
 }

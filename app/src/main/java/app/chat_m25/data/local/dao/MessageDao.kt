@@ -39,4 +39,10 @@ interface MessageDao {
 
     @Query("SELECT * FROM messages ORDER BY timestamp ASC")
     suspend fun getAllMessages(): List<MessageEntity>
+
+    @Query("UPDATE messages SET status = 'RECALLED' WHERE id = :messageId")
+    suspend fun recallMessage(messageId: Long)
+
+    @Query("UPDATE messages SET status = :status WHERE id = :messageId")
+    suspend fun updateMessageStatus(messageId: Long, status: String)
 }

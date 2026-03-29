@@ -15,7 +15,7 @@ data class Message(
 )
 
 enum class MessageStatus {
-    SENDING, SENT, READ
+    SENDING, SENT, DELIVERED, READ, RECALLED
 }
 
 enum class MediaType {

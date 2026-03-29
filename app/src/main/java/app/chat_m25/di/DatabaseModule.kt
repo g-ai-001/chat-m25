@@ -6,6 +6,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import app.chat_m25.data.local.ChatDatabase
 import app.chat_m25.data.local.dao.ChatSessionDao
+import app.chat_m25.data.local.dao.CommentDao
 import app.chat_m25.data.local.dao.ContactDao
 import app.chat_m25.data.local.dao.MessageDao
 import app.chat_m25.data.local.dao.MomentDao
@@ -53,6 +54,26 @@ object DatabaseModule {
         }
     }
 
+    private val MIGRATION_6_7 = object : Migration(6, 7) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS comments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    momentId INTEGER NOT NULL,
+                    userId INTEGER NOT NULL,
+                    userName TEXT NOT NULL,
+                    userAvatar TEXT NOT NULL DEFAULT '',
+                    content TEXT NOT NULL,
+                    timestamp INTEGER NOT NULL,
+                    replyToId INTEGER,
+                    replyToUserName TEXT,
+                    FOREIGN KEY(momentId) REFERENCES moments(id) ON DELETE CASCADE
+                )
+            """.trimIndent())
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_comments_momentId ON comments(momentId)")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): ChatDatabase {
@@ -61,7 +82,7 @@ object DatabaseModule {
             ChatDatabase::class.java,
             "chat_m25_database"
         )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
             .build()
     }
 
@@ -87,5 +108,11 @@ object DatabaseModule {
     @Singleton
     fun provideMomentDao(database: ChatDatabase): MomentDao {
         return database.momentDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCommentDao(database: ChatDatabase): CommentDao {
+        return database.commentDao()
     }
 }

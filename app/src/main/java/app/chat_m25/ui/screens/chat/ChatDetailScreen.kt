@@ -178,7 +178,8 @@ fun ChatDetailScreen(
                             onDelete = { viewModel.deleteMessage(it) },
                             onToggleFavorite = { id, isFav -> viewModel.toggleFavorite(id, isFav) },
                             onReply = { viewModel.replyToMessage(it) },
-                            onForward = { viewModel.showForwardDialog(it) }
+                            onForward = { viewModel.showForwardDialog(it) },
+                            onRecall = { viewModel.recallMessage(it) }
                         )
                     }
                 }
@@ -321,7 +322,8 @@ fun MessageBubble(
     onDelete: (Long) -> Unit,
     onToggleFavorite: (Long, Boolean) -> Unit,
     onReply: (Message) -> Unit,
-    onForward: (Message) -> Unit
+    onForward: (Message) -> Unit,
+    onRecall: (Long) -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
@@ -388,12 +390,12 @@ fun MessageBubble(
                             Spacer(modifier = Modifier.height(4.dp))
                         }
                         Text(
-                            text = message.content,
+                            text = if (message.status.name == "RECALLED") "消息已撤回" else message.content,
                             style = MaterialTheme.typography.bodyMedium,
                             color = if (message.isFromMe)
-                                MaterialTheme.colorScheme.onPrimary
+                                MaterialTheme.colorScheme.onPrimary.copy(alpha = if (message.status.name == "RECALLED") 0.5f else 1f)
                             else
-                                MaterialTheme.colorScheme.onSurfaceVariant
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (message.status.name == "RECALLED") 0.5f else 1f)
                         )
                     }
                 }
@@ -402,6 +404,18 @@ fun MessageBubble(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false }
                 ) {
+                    if (message.isFromMe && message.status.name != "RECALLED") {
+                        DropdownMenuItem(
+                            text = { Text("撤回") },
+                            onClick = {
+                                onRecall(message.id)
+                                showMenu = false
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Default.SwapHoriz, contentDescription = null)
+                            }
+                        )
+                    }
                     DropdownMenuItem(
                         text = { Text("回复") },
                         onClick = {
@@ -459,11 +473,30 @@ fun MessageBubble(
 
         Spacer(modifier = Modifier.height(2.dp))
 
-        Text(
-            text = DateTimeFormatter.formatTime(message.timestamp),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End
+        ) {
+            Text(
+                text = DateTimeFormatter.formatTime(message.timestamp),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            )
+            if (message.isFromMe && message.status.name != "RECALLED") {
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = when (message.status.name) {
+                        "SENDING" -> "发送中"
+                        "SENT" -> "已发送"
+                        "DELIVERED" -> "已送达"
+                        "READ" -> "已读"
+                        else -> ""
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                )
+            }
+        }
     }
 }
 

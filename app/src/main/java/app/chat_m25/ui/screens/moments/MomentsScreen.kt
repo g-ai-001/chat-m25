@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Photo
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -58,6 +59,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import app.chat_m25.domain.model.Comment
 import app.chat_m25.domain.model.Moment
 import app.chat_m25.ui.components.Avatar
 import app.chat_m25.ui.components.CommonTopBar
@@ -109,8 +111,11 @@ fun MomentsScreen(
                 items(uiState.moments, key = { it.id }) { moment ->
                     MomentItem(
                         moment = moment,
+                        comments = uiState.comments[moment.id] ?: emptyList(),
                         onLikeClick = { viewModel.toggleLike(moment.id) },
-                        onDeleteClick = { viewModel.deleteMoment(moment.id) }
+                        onDeleteClick = { viewModel.deleteMoment(moment.id) },
+                        onCommentClick = { viewModel.showCommentDialog(moment.id) },
+                        onDeleteComment = { viewModel.deleteComment(it) }
                     )
                 }
             }
@@ -127,14 +132,28 @@ fun MomentsScreen(
                 onPublish = { viewModel.publish() }
             )
         }
+
+        if (uiState.showCommentDialog && uiState.selectedMomentId != null) {
+            CommentDialog(
+                comments = uiState.comments[uiState.selectedMomentId] ?: emptyList(),
+                commentContent = uiState.commentContent,
+                onContentChange = { viewModel.updateCommentContent(it) },
+                onDismiss = { viewModel.hideCommentDialog() },
+                onSend = { viewModel.addComment(uiState.selectedMomentId!!) },
+                onDeleteComment = { viewModel.deleteComment(it) }
+            )
+        }
     }
 }
 
 @Composable
 fun MomentItem(
     moment: Moment,
+    comments: List<Comment>,
     onLikeClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onCommentClick: () -> Unit,
+    onDeleteComment: (Long) -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
@@ -211,7 +230,7 @@ fun MomentItem(
                             }
 
                             IconButton(
-                                onClick = { },
+                                onClick = onCommentClick,
                                 modifier = Modifier.size(32.dp)
                             ) {
                                 Icon(
@@ -249,6 +268,14 @@ fun MomentItem(
                                 }
                             }
                         }
+                    }
+
+                    if (comments.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        CommentSection(
+                            comments = comments,
+                            onDeleteComment = onDeleteComment
+                        )
                     }
                 }
             }
@@ -365,6 +392,174 @@ fun PublishMomentDialog(
                 enabled = !isPublishing
             ) {
                 Text("取消")
+            }
+        }
+    )
+}
+
+@Composable
+fun CommentSection(
+    comments: List<Comment>,
+    onDeleteComment: (Long) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                RoundedCornerShape(4.dp)
+            )
+            .padding(8.dp)
+    ) {
+        comments.forEach { comment ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 2.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                Text(
+                    text = comment.userName,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                if (comment.replyToUserName != null) {
+                    Text(
+                        text = " 回复 ",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = comment.replyToUserName,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Text(
+                    text = ": ${comment.content}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CommentDialog(
+    comments: List<Comment>,
+    commentContent: String,
+    onContentChange: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onSend: () -> Unit,
+    onDeleteComment: (Long) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("评论") },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
+            ) {
+                if (comments.isNotEmpty()) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    ) {
+                        items(comments) { comment ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = comment.userName,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = comment.content,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = DateTimeFormatter.formatMomentTime(comment.timestamp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                if (comment.userId == 1L) {
+                                    IconButton(
+                                        onClick = { onDeleteComment(comment.id) },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.MoreVert,
+                                            contentDescription = "删除",
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "暂无评论",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = commentContent,
+                        onValueChange = onContentChange,
+                        modifier = Modifier.weight(1f),
+                        placeholder = { Text("写评论...") },
+                        maxLines = 3,
+                        enabled = true
+                    )
+                    IconButton(
+                        onClick = onSend,
+                        enabled = commentContent.isNotBlank()
+                    ) {
+                        Icon(
+                            Icons.Default.Send,
+                            contentDescription = "发送",
+                            tint = if (commentContent.isNotBlank())
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("关闭")
             }
         }
     )
