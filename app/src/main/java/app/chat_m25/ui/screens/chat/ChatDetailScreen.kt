@@ -243,7 +243,9 @@ fun ChatDetailScreen(
                                 onToggleFavorite = { id, isFav -> viewModel.toggleFavorite(id, isFav) },
                                 onReply = { viewModel.replyToMessage(it) },
                                 onForward = { viewModel.showForwardDialog(it) },
-                                onRecall = { viewModel.recallMessage(it) }
+                                onRecall = { viewModel.recallMessage(it) },
+                                onJumpToMessage = { viewModel.jumpToMessage(it) },
+                                replyToMessage = message.replyToId?.let { uiState.replyToMessages[it] }
                             )
                         }
                     }
@@ -361,8 +363,12 @@ fun ChatDetailScreen(
                     onValueChange = { viewModel.updateInputText(it) },
                     modifier = Modifier.weight(1f),
                     placeholder = { Text("输入消息...") },
-                    maxLines = 4,
-                    shape = RoundedCornerShape(24.dp)
+                    maxLines = 6,
+                    minLines = 1,
+                    shape = RoundedCornerShape(24.dp),
+                    keyboardOptions = androidx.compose.foundation.text.input.KeyboardOptions(
+                        imeAction = androidx.compose.ui.text.input.ImeAction.Default
+                    )
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -895,7 +901,9 @@ fun MessageBubble(
     onToggleFavorite: (Long, Boolean) -> Unit,
     onReply: (Message) -> Unit,
     onForward: (Message) -> Unit,
-    onRecall: (Long) -> Unit
+    onRecall: (Long) -> Unit,
+    onJumpToMessage: (Long) -> Unit = {},
+    replyToMessage: Message? = null
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
@@ -948,10 +956,13 @@ fun MessageBubble(
                                         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                                         RoundedCornerShape(4.dp)
                                     )
+                                    .clickable { onJumpToMessage(message.replyToId) }
                                     .padding(4.dp)
                             ) {
                                 Text(
-                                    text = "回复消息",
+                                    text = replyToMessage?.content?.take(30)?.let {
+                                        if (replyToMessage.content.length > 30) "$it..." else it
+                                    } ?: "回复消息",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = if (message.isFromMe)
                                         MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)

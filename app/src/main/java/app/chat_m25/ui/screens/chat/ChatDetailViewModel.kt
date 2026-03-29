@@ -26,7 +26,8 @@ data class ChatDetailUiState(
     val forwardMessage: Message? = null,
     val isRecording: Boolean = false,
     val showMorePanel: Boolean = false,
-    val scrollToMessageId: Long? = null
+    val scrollToMessageId: Long? = null,
+    val replyToMessages: Map<Long, Message> = emptyMap()
 )
 
 @HiltViewModel
@@ -65,7 +66,21 @@ class ChatDetailViewModel @Inject constructor(
                     messages = messages,
                     isLoading = false
                 )
+                loadReplyToMessages(messages)
             }
+        }
+    }
+
+    private fun loadReplyToMessages(messages: List<Message>) {
+        viewModelScope.launch {
+            val replyToIds = messages.mapNotNull { it.replyToId }.distinct()
+            val replyToMessages = mutableMapOf<Long, Message>()
+            replyToIds.forEach { replyToId ->
+                chatRepository.getMessageById(replyToId)?.let { message ->
+                    replyToMessages[replyToId] = message
+                }
+            }
+            _uiState.value = _uiState.value.copy(replyToMessages = replyToMessages)
         }
     }
 
