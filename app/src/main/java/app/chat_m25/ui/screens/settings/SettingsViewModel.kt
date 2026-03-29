@@ -3,6 +3,9 @@ package app.chat_m25.ui.screens.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.chat_m25.data.repository.BackupRepository
+import app.chat_m25.data.repository.NotificationPreferences
+import app.chat_m25.data.repository.NotificationSettings
+import app.chat_m25.data.repository.NotificationSound
 import app.chat_m25.data.repository.ThemeMode
 import app.chat_m25.data.repository.ThemePreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,7 +28,8 @@ data class BackupUiState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val themePreferences: ThemePreferences,
-    private val backupRepository: BackupRepository
+    private val backupRepository: BackupRepository,
+    private val notificationPreferences: NotificationPreferences
 ) : ViewModel() {
 
     val themeMode: StateFlow<ThemeMode> = themePreferences.themeMode
@@ -34,9 +38,36 @@ class SettingsViewModel @Inject constructor(
     private val _backupUiState = MutableStateFlow(BackupUiState())
     val backupUiState: StateFlow<BackupUiState> = _backupUiState.asStateFlow()
 
+    val notificationSettings: StateFlow<NotificationSettings> = notificationPreferences.notificationSettings
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), NotificationSettings())
+
     fun setThemeMode(mode: ThemeMode) {
         viewModelScope.launch {
             themePreferences.setThemeMode(mode)
+        }
+    }
+
+    fun setNotificationEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            notificationPreferences.setNotificationEnabled(enabled)
+        }
+    }
+
+    fun setSoundEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            notificationPreferences.setSoundEnabled(enabled)
+        }
+    }
+
+    fun setVibrationEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            notificationPreferences.setVibrationEnabled(enabled)
+        }
+    }
+
+    fun setNotificationSound(sound: NotificationSound) {
+        viewModelScope.launch {
+            notificationPreferences.setSound(sound)
         }
     }
 

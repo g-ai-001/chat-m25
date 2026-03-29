@@ -20,8 +20,11 @@ import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.EmojiEmotions
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -29,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -42,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import app.chat_m25.data.repository.NotificationSound
 import app.chat_m25.data.repository.ThemeMode
 import app.chat_m25.ui.components.CommonTopBar
 import java.io.File
@@ -54,8 +59,10 @@ fun SettingsScreen(
 ) {
     val currentTheme by viewModel.themeMode.collectAsState()
     val backupUiState by viewModel.backupUiState.collectAsState()
+    val notificationSettings by viewModel.notificationSettings.collectAsState()
     var showExportDialog by remember { mutableStateOf(false) }
     var showImportDialog by remember { mutableStateOf(false) }
+    var showSoundDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -72,6 +79,47 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             Spacer(modifier = Modifier.height(8.dp))
+
+            // Notification settings section
+            Text(
+                text = "消息通知",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+
+            SettingsSwitchItem(
+                icon = Icons.Default.Notifications,
+                title = "启用通知",
+                subtitle = "接收新消息通知",
+                isChecked = notificationSettings.enabled,
+                onCheckedChange = { viewModel.setNotificationEnabled(it) }
+            )
+
+            SettingsSwitchItem(
+                icon = Icons.Default.VolumeUp,
+                title = "提示音",
+                subtitle = "收到消息时播放提示音",
+                isChecked = notificationSettings.soundEnabled,
+                onCheckedChange = { viewModel.setSoundEnabled(it) }
+            )
+
+            SettingsSwitchItem(
+                icon = Icons.Default.Vibration,
+                title = "振动",
+                subtitle = "收到消息时振动",
+                isChecked = notificationSettings.vibrationEnabled,
+                onCheckedChange = { viewModel.setVibrationEnabled(it) }
+            )
+
+            SettingsListItem(
+                icon = Icons.Default.VolumeUp,
+                title = "提示音",
+                subtitle = notificationSettings.sound.value,
+                onClick = { showSoundDialog = true }
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Theme settings section
             Text(
@@ -184,11 +232,50 @@ fun SettingsScreen(
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    text = "0.9.0",
+                    text = "0.10.0",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+
+        // Sound selection dialog
+        if (showSoundDialog) {
+            AlertDialog(
+                onDismissRequest = { showSoundDialog = false },
+                title = { Text("选择提示音") },
+                text = {
+                    Column {
+                        NotificationSound.entries.forEach { sound ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        viewModel.setNotificationSound(sound)
+                                        showSoundDialog = false
+                                    }
+                                    .padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = notificationSettings.sound == sound,
+                                    onClick = {
+                                        viewModel.setNotificationSound(sound)
+                                        showSoundDialog = false
+                                    }
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(text = sound.value)
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showSoundDialog = false }) {
+                        Text("取消")
+                    }
+                }
+            )
         }
 
         // Export result dialog
@@ -280,6 +367,48 @@ fun SettingsScreen(
                 }
             )
         }
+    }
+}
+
+@Composable
+fun SettingsSwitchItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    isChecked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!isChecked) }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary
+        )
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Switch(
+            checked = isChecked,
+            onCheckedChange = onCheckedChange
+        )
     }
 }
 

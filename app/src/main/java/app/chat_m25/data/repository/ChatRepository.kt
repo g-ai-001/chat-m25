@@ -154,6 +154,36 @@ class ChatRepository @Inject constructor(
         messageDao.updateMessageStatus(messageId, "READ")
     }
 
+    suspend fun sendAudioMessage(chatId: Long, audioPath: String, duration: Int): Long {
+        val message = MessageEntity(
+            chatId = chatId,
+            content = "语音消息 ${duration}秒",
+            isFromMe = true,
+            timestamp = System.currentTimeMillis(),
+            mediaType = "AUDIO",
+            mediaPath = audioPath,
+            duration = duration
+        )
+        val messageId = messageDao.insertMessage(message)
+        chatSessionDao.updateLastMessage(chatId, "语音消息", System.currentTimeMillis())
+        return messageId
+    }
+
+    suspend fun sendLocationMessage(chatId: Long, latitude: Double, longitude: Double, address: String): Long {
+        val content = "$address\n坐标: $latitude,$longitude"
+        val message = MessageEntity(
+            chatId = chatId,
+            content = content,
+            isFromMe = true,
+            timestamp = System.currentTimeMillis(),
+            mediaType = "LOCATION",
+            mediaPath = "$latitude,$longitude"
+        )
+        val messageId = messageDao.insertMessage(message)
+        chatSessionDao.updateLastMessage(chatId, "位置", System.currentTimeMillis())
+        return messageId
+    }
+
     suspend fun updateMessageSentStatus(messageId: Long) {
         messageDao.updateMessageStatus(messageId, "SENT")
     }

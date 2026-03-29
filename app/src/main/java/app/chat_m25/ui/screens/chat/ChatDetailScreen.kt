@@ -33,8 +33,11 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EmojiEmotions
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Reply
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
@@ -82,7 +85,11 @@ fun ChatDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
     var showMenu by remember { mutableStateOf(false) }
+    var showLocationPicker by remember { mutableStateOf(false) }
     val backgroundColor = uiState.chatSession?.backgroundColor?.let { Color(it) } ?: Color.White
+    val isRecording by viewModel.isRecording.collectAsState()
+    val isPlaying by viewModel.isPlaying.collectAsState()
+    val playingMessageId by viewModel.playingMessageId.collectAsState()
 
     LaunchedEffect(uiState.messages.size) {
         if (uiState.messages.isNotEmpty()) {
@@ -173,14 +180,34 @@ fun ChatDetailScreen(
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp)
                 ) {
                     items(uiState.messages, key = { it.id }) { message ->
-                        MessageBubble(
-                            message = message,
-                            onDelete = { viewModel.deleteMessage(it) },
-                            onToggleFavorite = { id, isFav -> viewModel.toggleFavorite(id, isFav) },
-                            onReply = { viewModel.replyToMessage(it) },
-                            onForward = { viewModel.showForwardDialog(it) },
-                            onRecall = { viewModel.recallMessage(it) }
-                        )
+                        when (message.mediaType) {
+                            "AUDIO" -> VoiceMessageBubble(
+                                message = message,
+                                isPlaying = isPlaying && playingMessageId == message.id,
+                                onPlay = { viewModel.playAudio(message) },
+                                onDelete = { viewModel.deleteMessage(it) },
+                                onToggleFavorite = { id, isFav -> viewModel.toggleFavorite(id, isFav) },
+                                onReply = { viewModel.replyToMessage(it) },
+                                onForward = { viewModel.showForwardDialog(it) },
+                                onRecall = { viewModel.recallMessage(it) }
+                            )
+                            "LOCATION" -> LocationMessageBubble(
+                                message = message,
+                                onDelete = { viewModel.deleteMessage(it) },
+                                onToggleFavorite = { id, isFav -> viewModel.toggleFavorite(id, isFav) },
+                                onReply = { viewModel.replyToMessage(it) },
+                                onForward = { viewModel.showForwardDialog(it) },
+                                onRecall = { viewModel.recallMessage(it) }
+                            )
+                            else -> MessageBubble(
+                                message = message,
+                                onDelete = { viewModel.deleteMessage(it) },
+                                onToggleFavorite = { id, isFav -> viewModel.toggleFavorite(id, isFav) },
+                                onReply = { viewModel.replyToMessage(it) },
+                                onForward = { viewModel.showForwardDialog(it) },
+                                onRecall = { viewModel.recallMessage(it) }
+                            )
+                        }
                     }
                 }
             }
@@ -235,6 +262,36 @@ fun ChatDetailScreen(
                 }
             }
 
+            if (isRecording) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.errorContainer
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Mic,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "录音中... 向上滑动取消",
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        TextButton(onClick = { viewModel.cancelRecording() }) {
+                            Text("取消")
+                        }
+                    }
+                }
+            }
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -253,6 +310,14 @@ fun ChatDetailScreen(
                     )
                 }
 
+                IconButton(onClick = { showLocationPicker = true }) {
+                    Icon(
+                        Icons.Default.LocationOn,
+                        contentDescription = "位置",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
                 OutlinedTextField(
                     value = uiState.inputText,
                     onValueChange = { viewModel.updateInputText(it) },
@@ -264,32 +329,53 @@ fun ChatDetailScreen(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                IconButton(
-                    onClick = {
-                        if (uiState.replyingTo != null) {
-                            viewModel.sendReplyMessage()
-                        } else {
-                            viewModel.sendMessage()
-                        }
-                    },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (uiState.inputText.isNotBlank())
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.surfaceVariant
+                if (uiState.inputText.isNotBlank()) {
+                    IconButton(
+                        onClick = {
+                            if (uiState.replyingTo != null) {
+                                viewModel.sendReplyMessage()
+                            } else {
+                                viewModel.sendMessage()
+                            }
+                        },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.Send,
+                            contentDescription = "发送",
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.Send,
-                        contentDescription = "发送",
-                        tint = if (uiState.inputText.isNotBlank())
-                            MaterialTheme.colorScheme.onPrimary
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    }
+                } else {
+                    IconButton(
+                        onClick = { viewModel.startRecording() },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Icon(
+                            Icons.Default.Mic,
+                            contentDescription = "录音",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    IconButton(
+                        onClick = { viewModel.stopRecordingAndSend() },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.Send,
+                            contentDescription = "发送语音",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                 }
             }
 
@@ -309,6 +395,381 @@ fun ChatDetailScreen(
                     message = uiState.forwardMessage!!,
                     onDismiss = { viewModel.hideForwardDialog() },
                     onForward = { targetChatId -> viewModel.forwardMessageTo(targetChatId) }
+                )
+            }
+
+            if (showLocationPicker) {
+                LocationPickerDialog(
+                    onDismiss = { showLocationPicker = false },
+                    onLocationSelected = { lat, lng, address ->
+                        viewModel.sendLocation(lat, lng, address)
+                        showLocationPicker = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun VoiceMessageBubble(
+    message: Message,
+    isPlaying: Boolean,
+    onPlay: () -> Unit,
+    onDelete: (Long) -> Unit,
+    onToggleFavorite: (Long, Boolean) -> Unit,
+    onReply: (Message) -> Unit,
+    onForward: (Message) -> Unit,
+    onRecall: (Long) -> Unit
+) {
+    var showMenu by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = if (message.isFromMe) Alignment.End else Alignment.Start
+    ) {
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = if (message.isFromMe) Arrangement.End else Arrangement.Start
+        ) {
+            if (!message.isFromMe) {
+                Avatar(
+                    name = "?",
+                    size = 36.dp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+
+            Box {
+                Box(
+                    modifier = Modifier
+                        .widthIn(max = 200.dp)
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = 16.dp,
+                                topEnd = 16.dp,
+                                bottomStart = if (message.isFromMe) 16.dp else 4.dp,
+                                bottomEnd = if (message.isFromMe) 4.dp else 16.dp
+                            )
+                        )
+                        .background(
+                            if (message.isFromMe)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.surfaceVariant
+                        )
+                        .combinedClickable(
+                            onClick = { onPlay() },
+                            onLongClick = { showMenu = true }
+                        )
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            contentDescription = if (isPlaying) "暂停" else "播放",
+                            tint = if (message.isFromMe)
+                                MaterialTheme.colorScheme.onPrimary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Text(
+                            text = "${message.duration}秒",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (message.isFromMe)
+                                MaterialTheme.colorScheme.onPrimary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    if (message.isFromMe && message.status.name != "RECALLED") {
+                        DropdownMenuItem(
+                            text = { Text("撤回") },
+                            onClick = {
+                                onRecall(message.id)
+                                showMenu = false
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Default.SwapHoriz, contentDescription = null)
+                            }
+                        )
+                    }
+                    DropdownMenuItem(
+                        text = { Text("回复") },
+                        onClick = {
+                            onReply(message)
+                            showMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.Reply, contentDescription = null)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("转发") },
+                        onClick = {
+                            onForward(message)
+                            showMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.SwapHoriz, contentDescription = null)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(if (message.isFavorite) "取消收藏" else "收藏") },
+                        onClick = {
+                            onToggleFavorite(message.id, message.isFavorite)
+                            showMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(
+                                if (message.isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
+                                contentDescription = null
+                            )
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("删除") },
+                        onClick = {
+                            onDelete(message.id)
+                            showMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.Delete, contentDescription = null)
+                        }
+                    )
+                }
+            }
+
+            if (message.isFromMe) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Avatar(
+                    name = "我",
+                    size = 36.dp
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(2.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End
+        ) {
+            Text(
+                text = DateTimeFormatter.formatTime(message.timestamp),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            )
+            if (message.isFromMe && message.status.name != "RECALLED") {
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = when (message.status.name) {
+                        "SENDING" -> "发送中"
+                        "SENT" -> "已发送"
+                        "DELIVERED" -> "已送达"
+                        "READ" -> "已读"
+                        else -> ""
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun LocationMessageBubble(
+    message: Message,
+    onDelete: (Long) -> Unit,
+    onToggleFavorite: (Long, Boolean) -> Unit,
+    onReply: (Message) -> Unit,
+    onForward: (Message) -> Unit,
+    onRecall: (Long) -> Unit
+) {
+    var showMenu by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = if (message.isFromMe) Alignment.End else Alignment.Start
+    ) {
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = if (message.isFromMe) Arrangement.End else Arrangement.Start
+        ) {
+            if (!message.isFromMe) {
+                Avatar(
+                    name = "?",
+                    size = 36.dp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+
+            Box {
+                Box(
+                    modifier = Modifier
+                        .widthIn(max = 280.dp)
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = 16.dp,
+                                topEnd = 16.dp,
+                                bottomStart = if (message.isFromMe) 16.dp else 4.dp,
+                                bottomEnd = if (message.isFromMe) 4.dp else 16.dp
+                            )
+                        )
+                        .background(
+                            if (message.isFromMe)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.surfaceVariant
+                        )
+                        .combinedClickable(
+                            onClick = { },
+                            onLongClick = { showMenu = true }
+                        )
+                        .padding(12.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = if (message.isFromMe)
+                                MaterialTheme.colorScheme.onPrimary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Column {
+                            Text(
+                                text = "位置",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = if (message.isFromMe)
+                                    MaterialTheme.colorScheme.onPrimary
+                                else
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = message.content.split("\n").firstOrNull() ?: "位置",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (message.isFromMe)
+                                    MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                                else
+                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+                }
+
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    if (message.isFromMe && message.status.name != "RECALLED") {
+                        DropdownMenuItem(
+                            text = { Text("撤回") },
+                            onClick = {
+                                onRecall(message.id)
+                                showMenu = false
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Default.SwapHoriz, contentDescription = null)
+                            }
+                        )
+                    }
+                    DropdownMenuItem(
+                        text = { Text("回复") },
+                        onClick = {
+                            onReply(message)
+                            showMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.Reply, contentDescription = null)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("转发") },
+                        onClick = {
+                            onForward(message)
+                            showMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.SwapHoriz, contentDescription = null)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(if (message.isFavorite) "取消收藏" else "收藏") },
+                        onClick = {
+                            onToggleFavorite(message.id, message.isFavorite)
+                            showMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(
+                                if (message.isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
+                                contentDescription = null
+                            )
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("删除") },
+                        onClick = {
+                            onDelete(message.id)
+                            showMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.Delete, contentDescription = null)
+                        }
+                    )
+                }
+            }
+
+            if (message.isFromMe) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Avatar(
+                    name = "我",
+                    size = 36.dp
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(2.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End
+        ) {
+            Text(
+                text = DateTimeFormatter.formatTime(message.timestamp),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            )
+            if (message.isFromMe && message.status.name != "RECALLED") {
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = when (message.status.name) {
+                        "SENDING" -> "发送中"
+                        "SENT" -> "已发送"
+                        "DELIVERED" -> "已送达"
+                        "READ" -> "已读"
+                        else -> ""
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
             }
         }

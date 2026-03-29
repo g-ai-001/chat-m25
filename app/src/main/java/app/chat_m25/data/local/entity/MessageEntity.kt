@@ -29,5 +29,6 @@ data class MessageEntity(
     val replyToId: Long? = null,
     val forwardedFromId: Long? = null,
     val mediaType: String? = null,
-    val mediaPath: String? = null
+    val mediaPath: String? = null,
+    val duration: Int = 0
 )

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import app.chat_m25.data.repository.ChatRepository
 import app.chat_m25.domain.model.ChatSession
 import app.chat_m25.domain.model.Message
+import app.chat_m25.util.AudioManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,19 +23,26 @@ data class ChatDetailUiState(
     val showBackgroundPicker: Boolean = false,
     val replyingTo: Message? = null,
     val showForwardDialog: Boolean = false,
-    val forwardMessage: Message? = null
+    val forwardMessage: Message? = null,
+    val isRecording: Boolean = false,
+    val showMorePanel: Boolean = false
 )
 
 @HiltViewModel
 class ChatDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val chatRepository: ChatRepository
+    private val chatRepository: ChatRepository,
+    private val audioManager: AudioManager
 ) : ViewModel() {
 
     private val chatId: Long = savedStateHandle.get<Long>("chatId") ?: 0L
 
     private val _uiState = MutableStateFlow(ChatDetailUiState())
     val uiState: StateFlow<ChatDetailUiState> = _uiState.asStateFlow()
+
+    val isRecording: StateFlow<Boolean> = audioManager.isRecording
+    val isPlaying: StateFlow<Boolean> = audioManager.isPlaying
+    val playingMessageId: StateFlow<Long?> = audioManager.playingMessageId
 
     init {
         loadChat()
@@ -180,6 +188,50 @@ class ChatDetailViewModel @Inject constructor(
     fun recallMessage(messageId: Long) {
         viewModelScope.launch {
             chatRepository.recallMessage(messageId)
+        }
+    }
+
+    fun toggleMorePanel() {
+        _uiState.value = _uiState.value.copy(showMorePanel = !_uiState.value.showMorePanel)
+    }
+
+    fun startRecording() {
+        audioManager.startRecording()
+        _uiState.value = _uiState.value.copy(isRecording = true)
+    }
+
+    fun stopRecordingAndSend() {
+        val result = audioManager.stopRecording()
+        _uiState.value = _uiState.value.copy(isRecording = false)
+        result?.let { (path, duration) ->
+            viewModelScope.launch {
+                chatRepository.sendAudioMessage(chatId, path, duration)
+            }
+        }
+    }
+
+    fun cancelRecording() {
+        audioManager.cancelRecording()
+        _uiState.value = _uiState.value.copy(isRecording = false)
+    }
+
+    fun playAudio(message: Message) {
+        message.mediaPath?.let { path ->
+            if (audioManager.isPlayingMessage(message.id)) {
+                audioManager.stopPlayback()
+            } else {
+                audioManager.playAudio(message.id, path)
+            }
+        }
+    }
+
+    fun stopPlayback() {
+        audioManager.stopPlayback()
+    }
+
+    fun sendLocation(latitude: Double, longitude: Double, address: String) {
+        viewModelScope.launch {
+            chatRepository.sendLocationMessage(chatId, latitude, longitude, address)
         }
     }
 }

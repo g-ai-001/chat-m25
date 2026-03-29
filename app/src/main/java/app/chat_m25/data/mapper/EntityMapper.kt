@@ -56,7 +56,8 @@ object EntityMapper {
         replyToId = replyToId,
         forwardedFromId = forwardedFromId,
         mediaType = mediaType,
-        mediaPath = mediaPath
+        mediaPath = mediaPath,
+        duration = duration
     )
 
     fun Message.toEntity() = MessageEntity(
@@ -70,7 +71,8 @@ object EntityMapper {
         replyToId = replyToId,
         forwardedFromId = forwardedFromId,
         mediaType = mediaType,
-        mediaPath = mediaPath
+        mediaPath = mediaPath,
+        duration = duration
     )
 
     fun ContactEntity.toDomain() = Contact(
