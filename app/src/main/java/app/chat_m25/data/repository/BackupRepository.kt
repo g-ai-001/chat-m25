@@ -222,9 +222,9 @@ class BackupRepository @Inject constructor(
                     val momentJson = momentsArray.getJSONObject(i)
                     val moment = app.chat_m25.data.local.entity.MomentEntity(
                         id = 0,
-                        userId = momentJson.getString("userId"),
+                        userId = momentJson.getLong("userId"),
                         userName = momentJson.getString("userName"),
-                        userAvatar = momentJson.getString("userAvatar").takeIf { it.isNotEmpty() },
+                        userAvatar = momentJson.optString("userAvatar", ""),
                         content = momentJson.getString("content"),
                         images = momentJson.getString("images"),
                         timestamp = momentJson.getLong("timestamp"),

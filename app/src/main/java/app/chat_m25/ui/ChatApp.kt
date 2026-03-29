@@ -206,10 +206,8 @@ fun ChatApp() {
             composable(
                 route = Routes.GROUP_INFO,
                 arguments = listOf(navArgument("chatId") { type = NavType.LongType })
-            ) { backStackEntry ->
-                val chatId = backStackEntry.arguments?.getLong("chatId") ?: 0L
+            ) {
                 GroupInfoScreen(
-                    chatId = chatId,
                     onBack = { navController.popBackStack() }
                 )
             }
