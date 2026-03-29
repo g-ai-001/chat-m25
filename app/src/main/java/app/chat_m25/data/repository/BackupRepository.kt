@@ -224,7 +224,7 @@ class BackupRepository @Inject constructor(
                         id = 0,
                         userId = momentJson.getLong("userId"),
                         userName = momentJson.getString("userName"),
-                        userAvatar = momentJson.optString("userAvatar", ""),
+                        userAvatar = momentJson.optString("userAvatar", null) ?: "",
                         content = momentJson.getString("content"),
                         images = momentJson.getString("images"),
                         timestamp = momentJson.getLong("timestamp"),
