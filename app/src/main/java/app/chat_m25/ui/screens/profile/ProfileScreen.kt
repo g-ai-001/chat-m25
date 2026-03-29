@@ -18,10 +18,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.outlined.Chat
-import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.FolderOpen
@@ -47,7 +47,8 @@ import app.chat_m25.ui.components.CommonTopBar
 @Composable
 fun ProfileScreen(
     onSettingsClick: () -> Unit = {},
-    onFavoritesClick: () -> Unit = {}
+    onFavoritesClick: () -> Unit = {},
+    onScanClick: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -103,7 +104,17 @@ fun ProfileScreen(
                 Icon(
                     Icons.Default.QrCode,
                     contentDescription = "二维码",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .size(24.dp)
+                )
+
+                Icon(
+                    Icons.Default.QrCodeScanner,
+                    contentDescription = "扫一扫",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.clickable { onScanClick() }
                 )
             }
 
@@ -135,6 +146,13 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
             HorizontalDivider()
+
+            ProfileMenuItem(
+                icon = Icons.Default.QrCodeScanner,
+                iconOutline = Icons.Default.QrCodeScanner,
+                title = "扫一扫",
+                onClick = onScanClick
+            )
 
             ProfileMenuItem(
                 icon = Icons.Default.Settings,

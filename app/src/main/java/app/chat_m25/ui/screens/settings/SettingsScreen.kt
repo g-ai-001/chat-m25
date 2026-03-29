@@ -18,8 +18,10 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.EmojiEmotions
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -157,6 +159,20 @@ fun SettingsScreen(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
 
+            SettingsListItem(
+                icon = Icons.Default.Info,
+                title = "关于我们",
+                subtitle = "了解chat-m25更多信息",
+                onClick = { }
+            )
+
+            SettingsListItem(
+                icon = Icons.Default.Description,
+                title = "用户协议",
+                subtitle = "查看用户协议和隐私政策",
+                onClick = { }
+            )
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -168,7 +184,7 @@ fun SettingsScreen(
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    text = "0.7.0",
+                    text = "0.9.0",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

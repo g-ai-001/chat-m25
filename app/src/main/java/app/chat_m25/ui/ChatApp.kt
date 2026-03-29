@@ -37,6 +37,7 @@ import app.chat_m25.ui.screens.home.HomeScreen
 import app.chat_m25.ui.screens.moments.MomentsScreen
 import app.chat_m25.ui.screens.profile.ProfileScreen
 import app.chat_m25.ui.screens.settings.SettingsScreen
+import app.chat_m25.ui.screens.scan.ScanQRCodeScreen
 
 sealed class Screen(
     val route: String,
@@ -63,6 +64,7 @@ object Routes {
     const val GROUP_INFO = "group_info/{chatId}"
     fun groupInfo(chatId: Long) = "group_info/$chatId"
     const val EMOTICON = "emoticon"
+    const val SCAN_QR = "scan_qr"
 }
 
 val bottomNavItems = listOf(Screen.Home, Screen.Contacts, Screen.Profile)
@@ -135,7 +137,8 @@ fun ChatApp() {
             composable(Screen.Profile.route) {
                 ProfileScreen(
                     onSettingsClick = { navController.navigate(Routes.SETTINGS) },
-                    onFavoritesClick = { navController.navigate(Routes.FAVORITES) }
+                    onFavoritesClick = { navController.navigate(Routes.FAVORITES) },
+                    onScanClick = { navController.navigate(Routes.SCAN_QR) }
                 )
             }
             composable(
@@ -213,6 +216,11 @@ fun ChatApp() {
             }
             composable(Routes.EMOTICON) {
                 EmoticonScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Routes.SCAN_QR) {
+                ScanQRCodeScreen(
                     onBack = { navController.popBackStack() }
                 )
             }
