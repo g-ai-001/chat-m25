@@ -32,7 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import app.chat_m25.domain.model.Message
 import app.chat_m25.ui.components.CommonTopBar
 import app.chat_m25.ui.components.EmptyState
