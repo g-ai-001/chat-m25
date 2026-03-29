@@ -15,7 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
-import androidx.compose.material.icons.filled.Gallery
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -117,7 +117,7 @@ fun ScanQRCodeScreen(
                                 containerColor = Color.White.copy(alpha = 0.2f)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Gallery,
+                                    imageVector = Icons.Default.PhotoLibrary,
                                     contentDescription = "相册",
                                     tint = Color.White
                                 )
