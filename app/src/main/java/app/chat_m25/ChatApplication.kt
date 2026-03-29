@@ -52,15 +52,15 @@ class ChatApplication : Application() {
 
 // Backward compatibility extension functions
 fun Context.log(message: String, level: LogLevel = LogLevel.INFO) {
-    if (::instance.isInitialized) {
-        instance.log(message, level)
+    if (ChatApplication::instance.isInitialized) {
+        ChatApplication.instance.log(message, level)
     }
 }
 fun Context.logDebug(message: String) = log(message, LogLevel.DEBUG)
 fun Context.logInfo(message: String) = log(message, LogLevel.INFO)
 fun Context.logWarn(message: String) = log(message, LogLevel.WARN)
 fun Context.logError(message: String, throwable: Throwable? = null) {
-    if (::instance.isInitialized) {
-        instance.log(message, LogLevel.ERROR, throwable)
+    if (ChatApplication::instance.isInitialized) {
+        ChatApplication.instance.log(message, LogLevel.ERROR, throwable)
     }
 }
