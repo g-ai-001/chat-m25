@@ -1,5 +1,7 @@
 package app.chat_m25.ui.screens.chat
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -32,7 +34,10 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.EmojiEmotions
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Mic
@@ -66,6 +71,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -87,13 +93,36 @@ fun ChatDetailScreen(
     val listState = rememberLazyListState()
     var showMenu by remember { mutableStateOf(false) }
     var showLocationPicker by remember { mutableStateOf(false) }
+    var showMorePanel by remember { mutableStateOf(false) }
     val backgroundColor = uiState.chatSession?.backgroundColor?.let { Color(it) } ?: Color.White
     val isRecording by viewModel.isRecording.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
     val playingMessageId by viewModel.playingMessageId.collectAsState()
+    val context = LocalContext.current
+
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            val fileName = uri.lastPathSegment ?: "文件"
+            val filePath = uri.toString()
+            viewModel.sendFile(fileName, filePath, 0)
+        }
+        showMorePanel = false
+    }
+
+    LaunchedEffect(uiState.scrollToMessageId) {
+        uiState.scrollToMessageId?.let { messageId ->
+            val index = uiState.messages.indexOfFirst { it.id == messageId }
+            if (index >= 0) {
+                listState.animateScrollToItem(index)
+                viewModel.clearScrollToMessage()
+            }
+        }
+    }
 
     LaunchedEffect(uiState.messages.size) {
-        if (uiState.messages.isNotEmpty()) {
+        if (uiState.messages.isNotEmpty() && uiState.scrollToMessageId == null) {
             listState.animateScrollToItem(uiState.messages.size - 1)
         }
     }
@@ -193,6 +222,14 @@ fun ChatDetailScreen(
                                 onRecall = { viewModel.recallMessage(it) }
                             )
                             "LOCATION" -> LocationMessageBubble(
+                                message = message,
+                                onDelete = { viewModel.deleteMessage(it) },
+                                onToggleFavorite = { id, isFav -> viewModel.toggleFavorite(id, isFav) },
+                                onReply = { viewModel.replyToMessage(it) },
+                                onForward = { viewModel.showForwardDialog(it) },
+                                onRecall = { viewModel.recallMessage(it) }
+                            )
+                            "FILE" -> FileMessageBubble(
                                 message = message,
                                 onDelete = { viewModel.deleteMessage(it) },
                                 onToggleFavorite = { id, isFav -> viewModel.toggleFavorite(id, isFav) },
@@ -300,6 +337,14 @@ fun ChatDetailScreen(
                     .padding(horizontal = 8.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                IconButton(onClick = { showMorePanel = !showMorePanel }) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "更多",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
                 IconButton(onClick = { viewModel.toggleEmojiPicker() }) {
                     Icon(
                         Icons.Default.EmojiEmotions,
@@ -308,14 +353,6 @@ fun ChatDetailScreen(
                             MaterialTheme.colorScheme.primary
                         else
                             MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                IconButton(onClick = { showLocationPicker = true }) {
-                    Icon(
-                        Icons.Default.LocationOn,
-                        contentDescription = "位置",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -389,6 +426,79 @@ fun ChatDetailScreen(
                     onEmojiSelected = { viewModel.onEmojiSelected(it) },
                     modifier = Modifier.fillMaxWidth()
                 )
+            }
+
+            AnimatedVisibility(
+                visible = showMorePanel,
+                enter = slideInVertically { it },
+                exit = slideOutVertically { it }
+            ) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.surface,
+                    shadowElevation = 4.dp
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.clickable {
+                                showLocationPicker = true
+                                showMorePanel = false
+                            }
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                modifier = Modifier.size(56.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        Icons.Default.LocationOn,
+                                        contentDescription = "位置",
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        modifier = Modifier.size(28.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "位置",
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.clickable {
+                                filePickerLauncher.launch("*/*")
+                            }
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                modifier = Modifier.size(56.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        Icons.Default.Folder,
+                                        contentDescription = "文件",
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        modifier = Modifier.size(28.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "文件",
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                    }
+                }
             }
 
             if (uiState.showForwardDialog && uiState.forwardMessage != null) {
@@ -859,6 +969,195 @@ fun MessageBubble(
                             else
                                 MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (message.status.name == "RECALLED") 0.5f else 1f)
                         )
+                    }
+                }
+
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    if (message.isFromMe && message.status.name != "RECALLED") {
+                        DropdownMenuItem(
+                            text = { Text("撤回") },
+                            onClick = {
+                                onRecall(message.id)
+                                showMenu = false
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Default.SwapHoriz, contentDescription = null)
+                            }
+                        )
+                    }
+                    DropdownMenuItem(
+                        text = { Text("回复") },
+                        onClick = {
+                            onReply(message)
+                            showMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.Reply, contentDescription = null)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("转发") },
+                        onClick = {
+                            onForward(message)
+                            showMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.SwapHoriz, contentDescription = null)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(if (message.isFavorite) "取消收藏" else "收藏") },
+                        onClick = {
+                            onToggleFavorite(message.id, message.isFavorite)
+                            showMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(
+                                if (message.isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
+                                contentDescription = null
+                            )
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("删除") },
+                        onClick = {
+                            onDelete(message.id)
+                            showMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.Delete, contentDescription = null)
+                        }
+                    )
+                }
+            }
+
+            if (message.isFromMe) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Avatar(
+                    name = "我",
+                    size = 36.dp
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(2.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End
+        ) {
+            Text(
+                text = DateTimeFormatter.formatTime(message.timestamp),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            )
+            if (message.isFromMe && message.status.name != "RECALLED") {
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = when (message.status.name) {
+                        "SENDING" -> "发送中"
+                        "SENT" -> "已发送"
+                        "DELIVERED" -> "已送达"
+                        "READ" -> "已读"
+                        else -> ""
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun FileMessageBubble(
+    message: Message,
+    onDelete: (Long) -> Unit,
+    onToggleFavorite: (Long, Boolean) -> Unit,
+    onReply: (Message) -> Unit,
+    onForward: (Message) -> Unit,
+    onRecall: (Long) -> Unit
+) {
+    var showMenu by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = if (message.isFromMe) Alignment.End else Alignment.Start
+    ) {
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = if (message.isFromMe) Arrangement.End else Arrangement.Start
+        ) {
+            if (!message.isFromMe) {
+                Avatar(
+                    name = "?",
+                    size = 36.dp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+
+            Box {
+                Box(
+                    modifier = Modifier
+                        .widthIn(max = 280.dp)
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = 16.dp,
+                                topEnd = 16.dp,
+                                bottomStart = if (message.isFromMe) 16.dp else 4.dp,
+                                bottomEnd = if (message.isFromMe) 4.dp else 16.dp
+                            )
+                        )
+                        .background(
+                            if (message.isFromMe)
+                                MaterialTheme.colorScheme.primaryContainer
+                            else
+                                MaterialTheme.colorScheme.surfaceVariant
+                        )
+                        .combinedClickable(
+                            onClick = { },
+                            onLongClick = { showMenu = true }
+                        )
+                        .padding(12.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Description,
+                            contentDescription = null,
+                            tint = if (message.isFromMe)
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(40.dp)
+                        )
+                        Column(modifier = Modifier.widthIn(max = 180.dp)) {
+                            Text(
+                                text = message.content.split(" (").firstOrNull() ?: "文件",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = if (message.isFromMe)
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                else
+                                    MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 2
+                            )
+                            Text(
+                                text = message.content.split("(").getOrNull(1)?.removeSuffix(")") ?: "",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (message.isFromMe)
+                                    MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                else
+                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                maxLines = 1
+                            )
+                        }
                     }
                 }
 

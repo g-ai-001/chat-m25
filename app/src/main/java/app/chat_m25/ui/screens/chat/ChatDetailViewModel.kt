@@ -25,7 +25,8 @@ data class ChatDetailUiState(
     val showForwardDialog: Boolean = false,
     val forwardMessage: Message? = null,
     val isRecording: Boolean = false,
-    val showMorePanel: Boolean = false
+    val showMorePanel: Boolean = false,
+    val scrollToMessageId: Long? = null
 )
 
 @HiltViewModel
@@ -233,5 +234,19 @@ class ChatDetailViewModel @Inject constructor(
         viewModelScope.launch {
             chatRepository.sendLocationMessage(chatId, latitude, longitude, address)
         }
+    }
+
+    fun sendFile(fileName: String, filePath: String, fileSize: Long) {
+        viewModelScope.launch {
+            chatRepository.sendFileMessage(chatId, fileName, filePath, fileSize)
+        }
+    }
+
+    fun jumpToMessage(messageId: Long) {
+        _uiState.value = _uiState.value.copy(scrollToMessageId = messageId)
+    }
+
+    fun clearScrollToMessage() {
+        _uiState.value = _uiState.value.copy(scrollToMessageId = null)
     }
 }

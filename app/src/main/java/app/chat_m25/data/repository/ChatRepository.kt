@@ -146,6 +146,16 @@ class ChatRepository @Inject constructor(
         }
     }
 
+    fun getFileMessages(chatId: Long): Flow<List<Message>> {
+        return messageDao.getFileMessages(chatId).map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
+    suspend fun getMessageById(messageId: Long): Message? {
+        return messageDao.getMessageById(messageId)?.toDomain()
+    }
+
     suspend fun recallMessage(messageId: Long) {
         messageDao.recallMessage(messageId)
     }
@@ -182,6 +192,30 @@ class ChatRepository @Inject constructor(
         val messageId = messageDao.insertMessage(message)
         chatSessionDao.updateLastMessage(chatId, "位置", System.currentTimeMillis())
         return messageId
+    }
+
+    suspend fun sendFileMessage(chatId: Long, fileName: String, filePath: String, fileSize: Long): Long {
+        val content = "$fileName ($formatFileSize(fileSize))"
+        val message = MessageEntity(
+            chatId = chatId,
+            content = content,
+            isFromMe = true,
+            timestamp = System.currentTimeMillis(),
+            mediaType = "FILE",
+            mediaPath = filePath
+        )
+        val messageId = messageDao.insertMessage(message)
+        chatSessionDao.updateLastMessage(chatId, "文件: $fileName", System.currentTimeMillis())
+        return messageId
+    }
+
+    private fun formatFileSize(size: Long): String {
+        return when {
+            size < 1024 -> "$size B"
+            size < 1024 * 1024 -> "${size / 1024} KB"
+            size < 1024 * 1024 * 1024 -> "${size / (1024 * 1024)} MB"
+            else -> "${size / (1024 * 1024 * 1024)} GB"
+        }
     }
 
     suspend fun updateMessageSentStatus(messageId: Long) {

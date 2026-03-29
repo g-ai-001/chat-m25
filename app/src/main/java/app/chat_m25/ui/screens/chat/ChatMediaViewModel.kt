@@ -14,6 +14,7 @@ import javax.inject.Inject
 
 data class ChatMediaUiState(
     val mediaMessages: List<Message> = emptyList(),
+    val fileMessages: List<Message> = emptyList(),
     val isLoading: Boolean = true
 )
 
@@ -30,6 +31,7 @@ class ChatMediaViewModel @Inject constructor(
 
     init {
         loadMediaMessages()
+        loadFileMessages()
     }
 
     private fun loadMediaMessages() {
@@ -38,6 +40,16 @@ class ChatMediaViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(
                     mediaMessages = messages,
                     isLoading = false
+                )
+            }
+        }
+    }
+
+    private fun loadFileMessages() {
+        viewModelScope.launch {
+            chatRepository.getFileMessages(chatId).collect { messages ->
+                _uiState.value = _uiState.value.copy(
+                    fileMessages = messages
                 )
             }
         }

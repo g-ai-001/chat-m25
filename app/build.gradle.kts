@@ -13,8 +13,8 @@ android {
         applicationId = "app.chat_m25"
         minSdk = 36
         targetSdk = 36
-        versionCode = 16
-        versionName = "0.10.1"
+        versionCode = 17
+        versionName = "0.11.0"
 
         vectorDrawables {
             useSupportLibrary = true
