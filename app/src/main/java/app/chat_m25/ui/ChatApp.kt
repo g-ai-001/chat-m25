@@ -28,8 +28,10 @@ import androidx.navigation.navArgument
 import app.chat_m25.ui.screens.chat.ChatDetailScreen
 import app.chat_m25.ui.screens.chat.ChatMediaScreen
 import app.chat_m25.ui.screens.group.CreateGroupScreen
+import app.chat_m25.ui.screens.group.GroupInfoScreen
 import app.chat_m25.ui.screens.contacts.ContactDetailScreen
 import app.chat_m25.ui.screens.contacts.ContactsScreen
+import app.chat_m25.ui.screens.emoticon.EmoticonScreen
 import app.chat_m25.ui.screens.favorites.FavoritesScreen
 import app.chat_m25.ui.screens.home.HomeScreen
 import app.chat_m25.ui.screens.moments.MomentsScreen
@@ -58,6 +60,9 @@ object Routes {
     const val CHAT_MEDIA = "chat_media/{chatId}"
     fun chatMedia(chatId: Long) = "chat_media/$chatId"
     const val CREATE_GROUP = "create_group"
+    const val GROUP_INFO = "group_info/{chatId}"
+    fun groupInfo(chatId: Long) = "group_info/$chatId"
+    const val EMOTICON = "emoticon"
 }
 
 val bottomNavItems = listOf(Screen.Home, Screen.Contacts, Screen.Profile)
@@ -140,7 +145,8 @@ fun ChatApp() {
                 val chatId = backStackEntry.arguments?.getLong("chatId") ?: 0L
                 ChatDetailScreen(
                     chatId = chatId,
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onGroupInfoClick = { id -> navController.navigate(Routes.groupInfo(id)) }
                 )
             }
             composable(Routes.MOMENTS) {
@@ -150,7 +156,8 @@ fun ChatApp() {
             }
             composable(Routes.SETTINGS) {
                 SettingsScreen(
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onEmoticonClick = { navController.navigate(Routes.EMOTICON) }
                 )
             }
             composable(
@@ -194,6 +201,21 @@ fun ChatApp() {
                             navController.navigate(Routes.chatDetail(groupId))
                         }
                     }
+                )
+            }
+            composable(
+                route = Routes.GROUP_INFO,
+                arguments = listOf(navArgument("chatId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val chatId = backStackEntry.arguments?.getLong("chatId") ?: 0L
+                GroupInfoScreen(
+                    chatId = chatId,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Routes.EMOTICON) {
+                EmoticonScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
         }

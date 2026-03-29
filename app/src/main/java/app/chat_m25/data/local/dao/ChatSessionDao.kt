@@ -40,4 +40,13 @@ interface ChatSessionDao {
 
     @Query("UPDATE chat_sessions SET backgroundColor = :color WHERE id = :chatId")
     suspend fun updateBackgroundColor(chatId: Long, color: Long)
+
+    @Query("UPDATE chat_sessions SET groupAvatar = :avatar WHERE id = :chatId")
+    suspend fun updateGroupAvatar(chatId: Long, avatar: String?)
+
+    @Query("UPDATE chat_sessions SET groupAnnouncement = :announcement WHERE id = :chatId")
+    suspend fun updateGroupAnnouncement(chatId: Long, announcement: String)
+
+    @Query("UPDATE chat_sessions SET name = :name WHERE id = :chatId")
+    suspend fun updateGroupName(chatId: Long, name: String)
 }

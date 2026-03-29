@@ -36,4 +36,7 @@ interface MessageDao {
 
     @Query("SELECT * FROM messages WHERE chatId = :chatId AND mediaType IS NOT NULL ORDER BY timestamp DESC")
     fun getMediaMessages(chatId: Long): Flow<List<MessageEntity>>
+
+    @Query("SELECT * FROM messages ORDER BY timestamp ASC")
+    suspend fun getAllMessages(): List<MessageEntity>
 }

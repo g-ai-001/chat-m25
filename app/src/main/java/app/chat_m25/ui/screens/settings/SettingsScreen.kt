@@ -9,27 +9,32 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.EmojiEmotions
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -37,13 +42,18 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.chat_m25.data.repository.ThemeMode
 import app.chat_m25.ui.components.CommonTopBar
+import java.io.File
 
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onEmoticonClick: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val currentTheme by viewModel.themeMode.collectAsState()
+    val backupUiState by viewModel.backupUiState.collectAsState()
+    var showExportDialog by remember { mutableStateOf(false) }
+    var showImportDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -92,6 +102,53 @@ fun SettingsScreen(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
+            // Backup and restore section
+            Text(
+                text = "数据管理",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+
+            SettingsListItem(
+                icon = Icons.Default.FileUpload,
+                title = "备份聊天记录",
+                subtitle = "导出数据到本地",
+                onClick = {
+                    viewModel.exportData()
+                    showExportDialog = true
+                }
+            )
+
+            SettingsListItem(
+                icon = Icons.Default.FileDownload,
+                title = "恢复聊天记录",
+                subtitle = "从本地导入数据",
+                onClick = {
+                    viewModel.loadBackupFiles()
+                    showImportDialog = true
+                }
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Emoticon section
+            Text(
+                text = "表情",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+
+            SettingsListItem(
+                icon = Icons.Default.EmojiEmotions,
+                title = "表情包管理",
+                subtitle = "浏览和管理表情包",
+                onClick = onEmoticonClick
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
             // About section
             Text(
                 text = "关于",
@@ -111,11 +168,101 @@ fun SettingsScreen(
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    text = "0.3.0",
+                    text = "0.7.0",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+
+        // Export result dialog
+        if (showExportDialog) {
+            AlertDialog(
+                onDismissRequest = {
+                    showExportDialog = false
+                    viewModel.clearExportResult()
+                },
+                title = { Text("备份结果") },
+                text = {
+                    if (backupUiState.isExporting) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            CircularProgressIndicator(modifier = Modifier.padding(end = 16.dp))
+                            Text("正在导出...")
+                        }
+                    } else {
+                        Text(backupUiState.exportResult ?: "导出完成")
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showExportDialog = false
+                            viewModel.clearExportResult()
+                        }
+                    ) {
+                        Text("确定")
+                    }
+                }
+            )
+        }
+
+        // Import dialog
+        if (showImportDialog) {
+            AlertDialog(
+                onDismissRequest = {
+                    showImportDialog = false
+                    viewModel.clearImportResult()
+                },
+                title = { Text("选择备份文件") },
+                text = {
+                    if (backupUiState.isImporting) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            CircularProgressIndicator(modifier = Modifier.padding(end = 16.dp))
+                            Text("正在导入...")
+                        }
+                    } else if (backupUiState.importResult != null) {
+                        Text("导入成功，共导入 ${backupUiState.importResult} 条数据")
+                    } else if (backupUiState.backupFiles.isEmpty()) {
+                        Text("没有找到备份文件")
+                    } else {
+                        LazyColumn {
+                            items(backupUiState.backupFiles) { filePath ->
+                                val fileName = File(filePath).name
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            viewModel.importData(filePath)
+                                        }
+                                        .padding(vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        Icons.Default.FileUpload,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        text = fileName,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showImportDialog = false
+                            viewModel.clearImportResult()
+                        }
+                    ) {
+                        Text("关闭")
+                    }
+                }
+            )
         }
     }
 }
@@ -162,5 +309,41 @@ fun ThemeOptionItem(
             selected = isSelected,
             onClick = onClick
         )
+    }
+}
+
+@Composable
+fun SettingsListItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary
+        )
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }

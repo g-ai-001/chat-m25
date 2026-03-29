@@ -23,7 +23,9 @@ object EntityMapper {
         isPinned = isPinned,
         doNotDisturb = doNotDisturb,
         backgroundColor = backgroundColor,
-        isGroup = isGroup
+        isGroup = isGroup,
+        groupAvatar = groupAvatar,
+        groupAnnouncement = groupAnnouncement
     )
 
     fun ChatSession.toEntity() = ChatSessionEntity(
@@ -36,7 +38,9 @@ object EntityMapper {
         isPinned = isPinned,
         doNotDisturb = doNotDisturb,
         backgroundColor = backgroundColor,
-        isGroup = isGroup
+        isGroup = isGroup,
+        groupAvatar = groupAvatar,
+        groupAnnouncement = groupAnnouncement
     )
 
     fun MessageEntity.toDomain() = Message(

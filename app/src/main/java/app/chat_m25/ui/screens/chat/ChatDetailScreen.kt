@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EmojiEmotions
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Reply
 import androidx.compose.material.icons.filled.Star
@@ -75,6 +76,7 @@ import app.chat_m25.ui.components.EmojiPicker
 fun ChatDetailScreen(
     chatId: Long,
     onBack: () -> Unit,
+    onGroupInfoClick: (Long) -> Unit = {},
     viewModel: ChatDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -113,6 +115,18 @@ fun ChatDetailScreen(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false }
                         ) {
+                            if (uiState.chatSession?.isGroup == true) {
+                                DropdownMenuItem(
+                                    text = { Text("群聊信息") },
+                                    onClick = {
+                                        showMenu = false
+                                        onGroupInfoClick(chatId)
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Info, contentDescription = null)
+                                    }
+                                )
+                            }
                             DropdownMenuItem(
                                 text = { Text("设置聊天背景") },
                                 onClick = {

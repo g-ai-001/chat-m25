@@ -77,6 +77,18 @@ class ChatRepository @Inject constructor(
         chatSessionDao.updateBackgroundColor(chatId, color)
     }
 
+    suspend fun updateGroupAvatar(chatId: Long, avatar: String?) {
+        chatSessionDao.updateGroupAvatar(chatId, avatar)
+    }
+
+    suspend fun updateGroupAnnouncement(chatId: Long, announcement: String) {
+        chatSessionDao.updateGroupAnnouncement(chatId, announcement)
+    }
+
+    suspend fun updateGroupName(chatId: Long, name: String) {
+        chatSessionDao.updateGroupName(chatId, name)
+    }
+
     suspend fun deleteMessage(messageId: Long) {
         messageDao.deleteMessageById(messageId)
     }

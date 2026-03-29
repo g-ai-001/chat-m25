@@ -15,5 +15,7 @@ data class ChatSessionEntity(
     val isPinned: Boolean = false,
     val doNotDisturb: Boolean = false,
     val backgroundColor: Long = 0xFFFFFFFF,
-    val isGroup: Boolean = false
+    val isGroup: Boolean = false,
+    val groupAvatar: String? = null,
+    val groupAnnouncement: String = ""
 )

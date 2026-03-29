@@ -46,6 +46,13 @@ object DatabaseModule {
         }
     }
 
+    private val MIGRATION_5_6 = object : Migration(5, 6) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("ALTER TABLE chat_sessions ADD COLUMN groupAvatar TEXT")
+            database.execSQL("ALTER TABLE chat_sessions ADD COLUMN groupAnnouncement TEXT NOT NULL DEFAULT ''")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): ChatDatabase {
@@ -54,7 +61,7 @@ object DatabaseModule {
             ChatDatabase::class.java,
             "chat_m25_database"
         )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
             .build()
     }
 
