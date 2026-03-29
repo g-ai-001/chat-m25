@@ -96,6 +96,11 @@
 - [x] 实现聊天记录备份与恢复功能（本地导出/导入）
 - [x] 实现表情包管理功能
 
+### 0.7.1 (PATCH) - 已完成
+**目标**: 修复构建失败问题
+- [x] 修复BackupRepository.kt中optString返回可空类型与MomentEntity.userAvatar非空类型的冲突
+- [x] 提交代码并验证CI通过
+
 ## 技术栈
 - **语言**: Kotlin 2.3.20
 - **构建工具**: Gradle 9.4.1 (Kotlin DSL)
